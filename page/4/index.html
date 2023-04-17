@@ -71,73 +71,6 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-LG3383线性筛" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2023/04/17/LG3383%E7%BA%BF%E6%80%A7%E7%AD%9B/" class="article-date">
-  <time class="dt-published" datetime="2023-04-17T03:36:29.823Z" itemprop="datePublished">2023-04-17</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2023/04/17/LG3383%E7%BA%BF%E6%80%A7%E7%AD%9B/">LG3383(线性筛)</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <span id="more"></span>
-
-<p>日期 2022&#x2F;03&#x2F;15<br><img width="1089" alt="截屏2022-03-15 11 11 05" src="https://user-images.githubusercontent.com/73943232/158298528-f50a6185-57cb-487b-8593-5ac98308ca85.png"></p>
-<p>[题目链接]<a target="_blank" rel="noopener" href="https://www.luogu.com.cn/problem/P3383">https://www.luogu.com.cn/problem/P3383</a></p>
-<h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>题目背景</p>
-<blockquote>
-<p>本题已更新，从判断素数改为了查询第 k 小的素数提示：如果你使用 cin 来读入，建议使用 std::ios::sync_with_stdio(0) 来加速。<br>题目描述如题，给定一个范围 n，有 q 个询问，每次输出第 k 小的素数。</p>
-<p>输入格式</p>
-<p>第一行包含两个正整数n,q，分别表示查询的范围和查询的个数。接下来 q 行每行一个正整数 k，表示查询第 k 小的素数。</p>
-<p>输出格式</p>
-<p>输出q 行，每行一个正整数表示答案。</p>
-<p>输入输出样例</p>
-<p>输入 #1 </p>
-<p>100 5</p>
-<p>1</p>
-<p>2</p>
-<p>3</p>
-<p>4</p>
-<p>5</p>
-<p>输出 #1</p>
-<p>2</p>
-<p>3</p>
-<p>5</p>
-<p>7</p>
-<p>11</p>
-</blockquote>
-<h2 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h2><p>这个题目是一道线性筛模板题，线性筛的时间复杂度是O(n)是目前最快的素数筛法，线性筛的原理即我们知道一个合数&#x3D;质数<em>合数或者合数&#x3D;质数</em>质数，即每一个数都是由不用的质数相乘得来的(也有<br>可能是相同质数相乘）所以，线性筛即利用质数*遍历的某数来得到筛除合数，			if (i % Prime[j] &#x3D;&#x3D; 0) {break;}而这个式子又确定了我们筛除合数是利用最小质因数来筛的，排除了一个数<br>可能被多个数筛的情况</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;bits/stdc++.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> INF 0x7fffffff</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> rep(x, y, z) for (int x = y; x &lt;= z; x++)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> dec(x, y, z) for (int x = y; x &gt;= z; x--)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> format(a) memset (a, 1, sizeof(a))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> swap(a, b) (a ^= b ^= a ^= b)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ll long long int</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ull unsigned long long int </span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> uint unsigned int</span></span><br><span class="line"><span class="type">const</span> <span class="type">int</span> maxn = <span class="number">1e8</span> + <span class="number">10</span>;</span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> cnt = <span class="number">0</span>;</span><br><span class="line"><span class="type">bool</span> isPrime[maxn];</span><br><span class="line"><span class="type">int</span> Prime[maxn];</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">GetPrime</span><span class="params">(<span class="type">int</span> n)</span> </span>&#123;</span><br><span class="line">  format(isPrime);</span><br><span class="line">  isPrime[<span class="number">1</span>] = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">2</span>; i &lt;= n; i++) &#123;</span><br><span class="line">    <span class="keyword">if</span> (isPrime[i]) &#123;</span><br><span class="line">      Prime[++cnt] = i;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> j = <span class="number">1</span>; j &lt;= cnt &amp;&amp; i * Prime[j] &lt;= n; j++) &#123;</span><br><span class="line">      isPrime[i * Prime[j]] = <span class="number">0</span>;</span><br><span class="line">      <span class="keyword">if</span> (i % Prime[j] == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[])</span> </span>&#123;</span><br><span class="line">  ios_base::<span class="built_in">sync_with_stdio</span>(<span class="literal">false</span>);</span><br><span class="line">  cin.<span class="built_in">tie</span>(<span class="literal">nullptr</span>);</span><br><span class="line">  <span class="type">int</span> n, q, x;</span><br><span class="line">  cin &gt;&gt; n &gt;&gt; q;</span><br><span class="line">  <span class="built_in">GetPrime</span>(n);</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; q; i++) &#123;</span><br><span class="line">    cin &gt;&gt; x;</span><br><span class="line">    cout &lt;&lt; Prime[x] &lt;&lt; endl;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2023/04/17/LG3383%E7%BA%BF%E6%80%A7%E7%AD%9B/" data-id="clgkagq7w000569rfe2u78a8t" data-title="LG3383(线性筛)" class="article-share-link">Share</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
     <article id="post-LG3369(Treap树模板)" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2023/04/17/LG3369(Treap%E6%A0%91%E6%A8%A1%E6%9D%BF)/" class="article-date">
@@ -212,7 +145,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/04/17/LG3369(Treap%E6%A0%91%E6%A8%A1%E6%9D%BF)/" data-id="clgkagq7z000a69rfflho707u" data-title="LG3369(Treap树模版)" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/04/17/LG3369(Treap%E6%A0%91%E6%A8%A1%E6%9D%BF)/" data-id="clgkajj4b00088wrfe7ef4dem" data-title="LG3369(Treap树模版)" class="article-share-link">Share</a>
       
       
       
@@ -257,11 +190,78 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/04/17/README/" data-id="clgkagq80000f69rfbh6egtma" data-title="My Blog" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/04/17/README/" data-id="clgkajj4c00098wrf26tadarq" data-title="My Blog" class="article-share-link">Share</a>
       
       
       
   <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/README/" rel="tag">README</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-LG3383线性筛" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/04/17/LG3383%E7%BA%BF%E6%80%A7%E7%AD%9B/" class="article-date">
+  <time class="dt-published" datetime="2023-04-17T03:36:29.823Z" itemprop="datePublished">2023-04-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/04/17/LG3383%E7%BA%BF%E6%80%A7%E7%AD%9B/">LG3383(线性筛)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <span id="more"></span>
+
+<p>日期 2022&#x2F;03&#x2F;15<br><img width="1089" alt="截屏2022-03-15 11 11 05" src="https://user-images.githubusercontent.com/73943232/158298528-f50a6185-57cb-487b-8593-5ac98308ca85.png"></p>
+<p>[题目链接]<a target="_blank" rel="noopener" href="https://www.luogu.com.cn/problem/P3383">https://www.luogu.com.cn/problem/P3383</a></p>
+<h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>题目背景</p>
+<blockquote>
+<p>本题已更新，从判断素数改为了查询第 k 小的素数提示：如果你使用 cin 来读入，建议使用 std::ios::sync_with_stdio(0) 来加速。<br>题目描述如题，给定一个范围 n，有 q 个询问，每次输出第 k 小的素数。</p>
+<p>输入格式</p>
+<p>第一行包含两个正整数n,q，分别表示查询的范围和查询的个数。接下来 q 行每行一个正整数 k，表示查询第 k 小的素数。</p>
+<p>输出格式</p>
+<p>输出q 行，每行一个正整数表示答案。</p>
+<p>输入输出样例</p>
+<p>输入 #1 </p>
+<p>100 5</p>
+<p>1</p>
+<p>2</p>
+<p>3</p>
+<p>4</p>
+<p>5</p>
+<p>输出 #1</p>
+<p>2</p>
+<p>3</p>
+<p>5</p>
+<p>7</p>
+<p>11</p>
+</blockquote>
+<h2 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h2><p>这个题目是一道线性筛模板题，线性筛的时间复杂度是O(n)是目前最快的素数筛法，线性筛的原理即我们知道一个合数&#x3D;质数<em>合数或者合数&#x3D;质数</em>质数，即每一个数都是由不用的质数相乘得来的(也有<br>可能是相同质数相乘）所以，线性筛即利用质数*遍历的某数来得到筛除合数，			if (i % Prime[j] &#x3D;&#x3D; 0) {break;}而这个式子又确定了我们筛除合数是利用最小质因数来筛的，排除了一个数<br>可能被多个数筛的情况</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;bits/stdc++.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> INF 0x7fffffff</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> rep(x, y, z) for (int x = y; x &lt;= z; x++)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> dec(x, y, z) for (int x = y; x &gt;= z; x--)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> format(a) memset (a, 1, sizeof(a))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> swap(a, b) (a ^= b ^= a ^= b)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ll long long int</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ull unsigned long long int </span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> uint unsigned int</span></span><br><span class="line"><span class="type">const</span> <span class="type">int</span> maxn = <span class="number">1e8</span> + <span class="number">10</span>;</span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> cnt = <span class="number">0</span>;</span><br><span class="line"><span class="type">bool</span> isPrime[maxn];</span><br><span class="line"><span class="type">int</span> Prime[maxn];</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">GetPrime</span><span class="params">(<span class="type">int</span> n)</span> </span>&#123;</span><br><span class="line">  format(isPrime);</span><br><span class="line">  isPrime[<span class="number">1</span>] = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">2</span>; i &lt;= n; i++) &#123;</span><br><span class="line">    <span class="keyword">if</span> (isPrime[i]) &#123;</span><br><span class="line">      Prime[++cnt] = i;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> j = <span class="number">1</span>; j &lt;= cnt &amp;&amp; i * Prime[j] &lt;= n; j++) &#123;</span><br><span class="line">      isPrime[i * Prime[j]] = <span class="number">0</span>;</span><br><span class="line">      <span class="keyword">if</span> (i % Prime[j] == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[])</span> </span>&#123;</span><br><span class="line">  ios_base::<span class="built_in">sync_with_stdio</span>(<span class="literal">false</span>);</span><br><span class="line">  cin.<span class="built_in">tie</span>(<span class="literal">nullptr</span>);</span><br><span class="line">  <span class="type">int</span> n, q, x;</span><br><span class="line">  cin &gt;&gt; n &gt;&gt; q;</span><br><span class="line">  <span class="built_in">GetPrime</span>(n);</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; q; i++) &#123;</span><br><span class="line">    cin &gt;&gt; x;</span><br><span class="line">    cout &lt;&lt; Prime[x] &lt;&lt; endl;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/17/LG3383%E7%BA%BF%E6%80%A7%E7%AD%9B/" data-id="clgkajj4c000c8wrf11jrehgy" data-title="LG3383(线性筛)" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li></ul>
 
     </footer>
   </div>
@@ -302,7 +302,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/04/17/CSAPP%E7%AC%AC%E5%85%AD%E7%AB%A0--%E5%AD%98%E5%82%A8%E5%99%A8%E7%9A%84%E5%B1%82%E6%AC%A1%E7%BB%93%E6%9E%84/" data-id="clgkagq7v000469rfax5tbh13" data-title="存储器的层次结构" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/04/17/CSAPP%E7%AC%AC%E5%85%AD%E7%AB%A0--%E5%AD%98%E5%82%A8%E5%99%A8%E7%9A%84%E5%B1%82%E6%AC%A1%E7%BB%93%E6%9E%84/" data-id="clgkajj4900048wrfaxidfhik" data-title="存储器的层次结构" class="article-share-link">Share</a>
       
       
       
@@ -371,7 +371,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/04/17/CSAPP%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0--%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" data-id="clgkagq7y000869rfeixi90ms" data-title="网络编程" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/04/17/CSAPP%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0--%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" data-id="clgkajj4900058wrf1rs47fcg" data-title="网络编程" class="article-share-link">Share</a>
       
       
       
@@ -431,7 +431,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/04/17/Acwing92/" data-id="clgkagq7s000169rfg5q08vej" data-title="Acwing92" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/04/17/Acwing92/" data-id="clgkajj4500018wrf128oh2k5" data-title="Acwing92" class="article-share-link">Share</a>
       
       
       
@@ -531,7 +531,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/04/17/C++%20%E9%87%8D%E8%BD%BD%E7%AC%A6%E5%8F%B7%E4%BB%A5%E5%8F%8A%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/" data-id="clgkagq7u000369rff2ar9dkg" data-title="C++重载符号以及自定义排序" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/04/17/C++%20%E9%87%8D%E8%BD%BD%E7%AC%A6%E5%8F%B7%E4%BB%A5%E5%8F%8A%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/" data-id="clgkajj4700038wrf1hde8ey8" data-title="C++重载符号以及自定义排序" class="article-share-link">Share</a>
       
       
       
@@ -590,7 +590,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/04/17/Acwing89/" data-id="clgkagq7o000069rfg7ir2paq" data-title="Acwing89" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/04/17/Acwing89/" data-id="clgkajj4000008wrfdybfdeyv" data-title="Acwing89" class="article-share-link">Share</a>
       
       
       
