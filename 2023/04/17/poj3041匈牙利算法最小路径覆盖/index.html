@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>poj3041 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="日期 2022&#x2F;03&#x2F;20 [题目链接]http:&#x2F;&#x2F;poj.org&#x2F;problem?id&#x3D;3041 [参考博客]https:&#x2F;&#x2F;www.jianshu.com&#x2F;p&#x2F;b4c5fb3439d4 题目 Asteroids Time Limit: 1000MS		Memory Limit: 65536KTotal Submissions: 32517		Accepted: 17279">
+<meta property="og:type" content="article">
+<meta property="og:title" content="poj3041">
+<meta property="og:url" content="http://example.com/2023/04/17/poj3041%E5%8C%88%E7%89%99%E5%88%A9%E7%AE%97%E6%B3%95%E6%9C%80%E5%B0%8F%E8%B7%AF%E5%BE%84%E8%A6%86%E7%9B%96/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="日期 2022&#x2F;03&#x2F;20 [题目链接]http:&#x2F;&#x2F;poj.org&#x2F;problem?id&#x3D;3041 [参考博客]https:&#x2F;&#x2F;www.jianshu.com&#x2F;p&#x2F;b4c5fb3439d4 题目 Asteroids Time Limit: 1000MS		Memory Limit: 65536KTotal Submissions: 32517		Accepted: 17279">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://user-images.githubusercontent.com/73943232/159160035-d4e86b93-a6cf-49c4-ab11-7826f52e1a0f.png">
+<meta property="article:published_time" content="2023-04-17T02:24:04.018Z">
+<meta property="article:modified_time" content="2023-04-17T02:40:50.675Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="algorithm">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/73943232/159160035-d4e86b93-a6cf-49c4-ab11-7826f52e1a0f.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-poj3041匈牙利算法最小路径覆盖" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/04/17/poj3041%E5%8C%88%E7%89%99%E5%88%A9%E7%AE%97%E6%B3%95%E6%9C%80%E5%B0%8F%E8%B7%AF%E5%BE%84%E8%A6%86%E7%9B%96/" class="article-date">
+  <time class="dt-published" datetime="2023-04-17T02:24:04.018Z" itemprop="datePublished">2023-04-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      poj3041
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>日期 2022&#x2F;03&#x2F;20</p>
+<p>[题目链接]<a target="_blank" rel="noopener" href="http://poj.org/problem?id=3041">http://poj.org/problem?id=3041</a></p>
+<p>[参考博客]<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/b4c5fb3439d4">https://www.jianshu.com/p/b4c5fb3439d4</a><br><img width="1158" alt="截屏2022-03-20 19 28 31" src="https://user-images.githubusercontent.com/73943232/159160035-d4e86b93-a6cf-49c4-ab11-7826f52e1a0f.png"></p>
+<h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><blockquote>
+<p>Asteroids</p>
+<p>Time Limit: 1000MS		Memory Limit: 65536K<br>Total Submissions: 32517		Accepted: 17279</p>
+<p>Description</p>
+<p>Bessie wants to navigate her spaceship through a dangerous asteroid field in the shape of an N x N grid (1 &lt;&#x3D; N &lt;&#x3D; 500). The grid contains K asteroids (1 &lt;&#x3D; K &lt;&#x3D; 10,000), which are conveniently located at the lattice points of the grid.<br>Fortunately, Bessie has a powerful weapon that can vaporize all the asteroids in any given row or column of the grid with a single shot.This weapon is quite expensive, so she wishes to use it sparingly.Given the location of all the asteroids in the field, find the minimum number of shots Bessie needs to fire to eliminate all of the asteroids.</p>
+<p>Input</p>
+<ul>
+<li>Line 1: Two integers N and K, separated by a single space. * Lines 2..K+1: Each line contains two space-separated integers R and C (1 &lt;&#x3D; R, C &lt;&#x3D; N) denoting the row and column coordinates of an asteroid, respectively.</li>
+</ul>
+<p>Output</p>
+<ul>
+<li>Line 1: The integer representing the minimum number of times Bessie must shoot.</li>
+</ul>
+<p>Sample Input</p>
+<p>3 4</p>
+<p>1 1</p>
+<p>1 3</p>
+<p>2 2</p>
+<p>3 2</p>
+<p>Sample Output</p>
+<p>2</p>
+</blockquote>
+<h2 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h2><blockquote>
+<p>该题的大致意思：在小行星区域中，存在很多小行星，为了行驶方便，需要将小行星全部消灭，但是激光炮一次只能消灭一行或一列的小行星。给你一个N*N的地图，和小行星分布情况，问最小发射几次激<br>光炮才能消灭所有的小行星。我们可以构建一个二分图利用最小点覆盖来解决问题，其实就是，找最少的点，使得这些点与所有边相邻。（最小点覆盖）利用匈牙利算法求最大匹配</p>
+</blockquote>
+<p>##代码演示</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">const</span> <span class="type">int</span> maxn = <span class="number">510</span>;</span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"><span class="type">int</span> res[maxn];</span><br><span class="line"><span class="type">int</span> vis[maxn];</span><br><span class="line"><span class="type">int</span> G[maxn][maxn];  <span class="comment">//邻接矩阵存图</span></span><br><span class="line"><span class="type">int</span> n, m;</span><br><span class="line"></span><br><span class="line"><span class="comment">//匈牙利算法</span></span><br><span class="line"><span class="function"><span class="type">bool</span> <span class="title">dfs</span><span class="params">(<span class="type">int</span> u)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (vis[u]) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  vis[u] = <span class="number">1</span>;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">1</span>; i &lt;= n; i++) &#123;</span><br><span class="line">    <span class="keyword">if</span> (G[u][i]) &#123; <span class="comment">//存在增广路</span></span><br><span class="line">      <span class="keyword">if</span> (res[i] == <span class="number">0</span> || <span class="built_in">dfs</span>(res[i])) &#123;</span><br><span class="line">        res[i] = u;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">solve</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="built_in">memset</span>(res, <span class="number">0</span>, <span class="built_in">sizeof</span>(res));</span><br><span class="line">  <span class="type">int</span> cnt = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">1</span>; i &lt;= n; i++) &#123;</span><br><span class="line">    <span class="built_in">memset</span>(vis, <span class="number">0</span>, <span class="built_in">sizeof</span>(vis));</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">dfs</span>(i)) &#123;</span><br><span class="line">      cnt++;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> cnt;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[])</span> </span>&#123;</span><br><span class="line">  <span class="type">int</span> x, y;</span><br><span class="line">  <span class="built_in">memset</span>(G, <span class="number">0</span>, <span class="built_in">sizeof</span>(G));</span><br><span class="line">  cin &gt;&gt; n &gt;&gt; m;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; m; i++) &#123;</span><br><span class="line">    cin &gt;&gt; x &gt;&gt; y;</span><br><span class="line">    G[x][y] = <span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  cout &lt;&lt; <span class="built_in">solve</span>() &lt;&lt; endl;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/17/poj3041%E5%8C%88%E7%89%99%E5%88%A9%E7%AE%97%E6%B3%95%E6%9C%80%E5%B0%8F%E8%B7%AF%E5%BE%84%E8%A6%86%E7%9B%96/" data-id="clgk8tjad001z63rfdvgxeh6f" data-title="poj3041" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2023/04/17/poj2418(map%E8%BE%93%E5%87%BA%E5%AD%97%E7%AC%A6%E4%B8%B2)/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          poj2418(map输出字符串)
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2023/04/17/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">数据库连接池</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/README/" rel="tag">README</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/blog/" rel="tag">blog</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/README/" style="font-size: 10px;">README</a> <a href="/tags/algorithm/" style="font-size: 20px;">algorithm</a> <a href="/tags/blog/" style="font-size: 15px;">blog</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/04/17/poj2418(map%E8%BE%93%E5%87%BA%E5%AD%97%E7%AC%A6%E4%B8%B2)/">poj2418(map输出字符串)</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/17/poj3041%E5%8C%88%E7%89%99%E5%88%A9%E7%AE%97%E6%B3%95%E6%9C%80%E5%B0%8F%E8%B7%AF%E5%BE%84%E8%A6%86%E7%9B%96/">poj3041</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/17/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0/">数据库连接池</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/17/%E9%93%BE%E5%BC%8F%E5%89%8D%E5%90%91%E6%98%9F%E5%AD%98%E5%9B%BE/">链式前向星存图</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/17/hdu2193(AVL%E6%A0%91%E7%9A%84%E9%AB%98%E5%BA%A6)/">hdu2193(AVL树的高度)</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

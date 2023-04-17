@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>C++重载符号以及自定义排序 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="问题引入 每次写关于容器排序的题目的时候我都是不知道怎么去排序，比如map里面的怎么按照key排序或者按照value排序，虽然之前有看过需要重载符号，但是我一直都不知道到底什么是重载符号以及它有什么作用，今天我查阅了很多资料终于搞懂了这个困扰我已久的问题，以下就讲了怎么去自定义排序。  重载定义 C++ 允许在同一作用域中的某个函数和运算符指定多个定义，分别称为函数重载和运算符重载。重载声明是指一">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++重载符号以及自定义排序">
+<meta property="og:url" content="http://example.com/2023/04/17/C++%20%E9%87%8D%E8%BD%BD%E7%AC%A6%E5%8F%B7%E4%BB%A5%E5%8F%8A%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="问题引入 每次写关于容器排序的题目的时候我都是不知道怎么去排序，比如map里面的怎么按照key排序或者按照value排序，虽然之前有看过需要重载符号，但是我一直都不知道到底什么是重载符号以及它有什么作用，今天我查阅了很多资料终于搞懂了这个困扰我已久的问题，以下就讲了怎么去自定义排序。  重载定义 C++ 允许在同一作用域中的某个函数和运算符指定多个定义，分别称为函数重载和运算符重载。重载声明是指一">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://user-images.githubusercontent.com/73943232/138327345-95ea1713-2dd9-40f7-ad28-8ec6ddd7d08b.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/73943232/138389292-0909b573-dcb7-4051-9492-10f341b69bcc.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/73943232/138389364-81857b7f-d1d1-439c-b9f2-4f524c3221b6.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/73943232/138389589-4ccb162b-a0de-4e90-aca3-8124720133ff.png">
+<meta property="article:published_time" content="2023-04-17T02:24:04.012Z">
+<meta property="article:modified_time" content="2023-04-17T02:39:36.386Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="blog">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/73943232/138327345-95ea1713-2dd9-40f7-ad28-8ec6ddd7d08b.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-C++ 重载符号以及自定义排序" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/04/17/C++%20%E9%87%8D%E8%BD%BD%E7%AC%A6%E5%8F%B7%E4%BB%A5%E5%8F%8A%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/" class="article-date">
+  <time class="dt-published" datetime="2023-04-17T02:24:04.012Z" itemprop="datePublished">2023-04-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      C++重载符号以及自定义排序
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="问题引入"><a href="#问题引入" class="headerlink" title="问题引入"></a>问题引入</h1><blockquote>
+<p>每次写关于容器排序的题目的时候我都是不知道怎么去排序，比如map里面的怎么按照key排序或者按照value排序，虽然之前有看过需要重载符号，但是我一直都不知道到底什么是重载符号以及它有什么作用，今天我查阅了很多资料终于搞懂了这个困扰我已久的问题，以下就讲了怎么去自定义排序。</p>
+</blockquote>
+<h1 id="重载定义"><a href="#重载定义" class="headerlink" title="重载定义"></a>重载定义</h1><blockquote>
+<p>C++ 允许在同一作用域中的某个函数和运算符指定多个定义，分别称为函数重载和运算符重载。<br>重载声明是指一个与之前已经在该作用域内声明过的函数或方法具有相同名称的声明，但是它们的参数列表和定义（实现）不相同。<br>当您调用一个重载函数或重载运算符时，编译器通过把您所使用的参数类型与定义中的参数类型进行比较，决定选用最合适的定义。选择最合适的重载函数或重载运算符的过程，称为重载决策。</p>
+</blockquote>
+<h1 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h1><blockquote>
+<p>在讲自定义排序之前我们需要知道在C++容器中(vector, list ,deque)这种容器叫线性容器，(map,set)这种容器叫做集合容器，sort算法只能对于线性容器进行排序，所以我们不能使用sort去对集合容器进行排序，map里面存储的元素是pair，不是线性存储的，它是的底层是红黑树，所以对于map的排序我们得把map中的元素放到线性容器(比如vector)中，然后利用vector再对元素进行排序，并且得满足容器中的元素是可比较的，一般对于自定义排序我们需要对符号进行重载,经过代码测试，我知道map默认是按照key的升序进行排列的(set也是)，value的排列的随机的(按照插入的顺序)，当在map&lt;string, int, greater &lt; string &gt; &gt;加入了greater &lt; string &gt; 以后会进行key的降序排列，map的默认定义时是map&lt;string, int ,less &lt; string &gt; &gt;是这样的(即默认是按照key升序排列的)，less&lt;类型名&gt;代表升序，而greater&lt;类型名&gt;代表降序.</p>
+</blockquote>
+<h1 id="博客参考"><a href="#博客参考" class="headerlink" title="博客参考"></a>博客参考</h1><p>  [博客链接]<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_30603195/article/details/86660263?spm=1001.2101.3001.6650.1&amp;utm_medium=distribute.pc_relevant.none-task-blog-2~default~CTRLIST~default-1.tagcolumn&amp;depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~CTRLIST~default-1.tagcolumn">https://blog.csdn.net/qq_30603195/article/details/86660263?spm=1001.2101.3001.6650.1&amp;utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1.tagcolumn&amp;depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1.tagcolumn</a></p>
+<blockquote>
+<p>STL所提供的各式各样算法中，sort()是最复杂最庞大的一个。这个算法接受两个RandomAccestlerators（随机存取迭代器），然后将区间内的所有元素以渐增方式由小到大重新排列。第二个版本则允许用户指定一个仿函数（functor），作为排序标准，STL的所有关系型容器主要包括set和map这两种容器（associative containers）都拥有自动排序功能（底层结构采用RB-tree，所以不需要用到这个sort算法。至于序列式容器（squence containers）中的 stack、queue 和priority-queue都有特别的出入口，不允许用户对元素排序。剩下vector.deque和list，前两者的迭代器属于RandomAccessiterators，适合使用sort算法，list的迭代器则属于Bidirectioinallterators,适合使用sort算法.list的迭代器则属于Bidirectionallterators,不在STL标准之列的slist,其迭代器更属于ForwardIIterators,不在STL标准之列的slist,其迭代器更属于ForwardIIterators,都不适用与sort算法，如果要对list或slist排序，应该使用它们自己提供的member functions sort().</p>
+<p>  [博客链接]<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_30603195/article/details/86660263?spm=1001.2101.3001.6650.1&amp;utm_medium=distribute.pc_relevant.none-task-blog-2~default~CTRLIST~default-1.tagcolumn&amp;depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~CTRLIST~default-1.tagcolumn">https://blog.csdn.net/qq_30603195/article/details/86660263?spm=1001.2101.3001.6650.1&amp;utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1.tagcolumn&amp;depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1.tagcolumn</a></p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;map&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">tagIntPlus</span> &#123;</span><br><span class="line">  <span class="type">int</span> num, i;</span><br><span class="line">&#125; IntPlus;</span><br><span class="line"><span class="comment">//自定义比较规则</span></span><br><span class="line"><span class="comment">//注意operator是(),不是＜</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Cmp</span> &#123;</span><br><span class="line">  <span class="function"><span class="type">bool</span> <span class="title">operator</span> <span class="params">()</span> <span class="params">(IntPlus <span class="type">const</span> &amp;a,IntPlus <span class="type">const</span> &amp;b)</span><span class="type">const</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(a.num != b.num) &#123;</span><br><span class="line">      <span class="keyword">return</span> a.num &lt; b.num;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> a.i&lt;b.i;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="built_in">srand</span>((<span class="type">unsigned</span>)<span class="built_in">time</span>(<span class="literal">NULL</span>));</span><br><span class="line">  <span class="comment">//注意此处一定要有Cmp，否则无法排序会报错</span></span><br><span class="line">  multimap&lt;IntPlus, <span class="type">int</span>, Cmp&gt; mp;</span><br><span class="line">  <span class="type">int</span> n;</span><br><span class="line">  cin &gt;&gt; n;</span><br><span class="line">  <span class="type">int</span> a,b;</span><br><span class="line">  IntPlus intplus;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line">    a = <span class="built_in">rand</span>() % <span class="number">4</span>;</span><br><span class="line">    b = <span class="built_in">rand</span>() % <span class="number">4</span>;</span><br><span class="line">    intplus.num = a;</span><br><span class="line">    intplus.i = b;</span><br><span class="line">    mp.<span class="built_in">insert</span>(<span class="built_in">pair</span>&lt;IntPlus,<span class="type">int</span>&gt;(intplus, i));</span><br><span class="line">  &#125;</span><br><span class="line">  map&lt;IntPlus,<span class="type">int</span>&gt;::iterator iter;</span><br><span class="line">  <span class="keyword">for</span> (iter = mp.<span class="built_in">begin</span>(); iter != mp.<span class="built_in">end</span>(); iter++) &#123;</span><br><span class="line">    cout &lt;&lt; iter-&gt;first.num &lt;&lt; <span class="string">&quot; &quot;</span> &lt;&lt; iter-&gt;first.i &lt;&lt; <span class="string">&quot; &quot;</span> &lt;&lt; iter-&gt;second &lt;&lt; endl;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<img width="667" alt="截屏2021-10-22 01 26 29" src="https://user-images.githubusercontent.com/73943232/138327345-95ea1713-2dd9-40f7-ad28-8ec6ddd7d08b.png">
+
+<h1 id="笔记"><a href="#笔记" class="headerlink" title="笔记"></a>笔记</h1><h2 id="map构造排序"><a href="#map构造排序" class="headerlink" title="map构造排序"></a>map构造排序</h2><blockquote>
+<p>所谓的构造排序就是指在容器构造时进行排序，STL里面提供了两个函数less&lt;类型名&gt;，greater&lt;类型名&gt;,less代表的是升序排序，这个是默认的排序，而greater<br>代表的是降序排序，可以是对key的排序也可以是对value的排序,需要注意的是无论是greater还是less都只能写一个(写成map&lt;类型名， 类型名， greater&lt;类型名&gt;，greater&lt;类型名&gt; &gt;这样是会报错的).</p>
+</blockquote>
+ <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"> <span class="meta">#<span class="keyword">include</span> <span class="string">&lt;bits/stdc++.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[])</span> </span>&#123;</span><br><span class="line">  ios_base::<span class="built_in">sync_with_stdio</span>(<span class="literal">false</span>);</span><br><span class="line">  cin.<span class="built_in">tie</span>(<span class="literal">nullptr</span>);</span><br><span class="line">  map&lt;string, <span class="type">int</span>, greater&lt;string&gt; &gt; m;</span><br><span class="line">  map&lt;string, <span class="type">int</span>, less&lt;string&gt; &gt; m1;</span><br><span class="line">  map&lt;string, <span class="type">int</span>, greater&lt;<span class="type">int</span>&gt; &gt; m2;</span><br><span class="line">  map&lt;string, <span class="type">int</span>, less&lt;<span class="type">int</span>&gt; &gt; m3;</span><br><span class="line">  map&lt;string, <span class="type">int</span>&gt; m4;</span><br><span class="line">  m[<span class="string">&quot;cs&quot;</span>] = <span class="number">3</span>;</span><br><span class="line">  m[<span class="string">&quot;ds&quot;</span>] = <span class="number">2</span>;</span><br><span class="line">  m[<span class="string">&quot;as&quot;</span>] = <span class="number">1</span>;</span><br><span class="line">  map&lt;string,<span class="type">int</span>&gt;::iterator it = m.<span class="built_in">begin</span>();</span><br><span class="line">  <span class="keyword">while</span> (it != m.<span class="built_in">end</span>()) &#123;</span><br><span class="line">    cout &lt;&lt; it-&gt;first &lt;&lt;  <span class="string">&quot; &quot;</span> &lt;&lt; it-&gt;second &lt;&lt; endl;</span><br><span class="line">    it++;</span><br><span class="line">  &#125;	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="map自定义排序-博客那篇的代码"><a href="#map自定义排序-博客那篇的代码" class="headerlink" title="map自定义排序(博客那篇的代码)"></a>map自定义排序(博客那篇的代码)</h2><blockquote>
+<p> 我们知道map里面储存的元素是pair，类似于结构体.可以看出key.num相同时是按照num.i的升序进行排列，至于int的值则是按照插入的顺序进行排列的，这里重载<br> 的是（）号，并且a.num &lt; b.num是表示的是升序，这个排序方向和我之前在重载&lt;符号的时候刚刚好是相反的.(即重载&lt;号的时候x&lt;y代表的是降序)，这里我用的随机数进行的测试<br>  如果我也想对插入的i也进行排序呢？</p>
+</blockquote>
+ <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"> <span class="meta">#<span class="keyword">include</span> <span class="string">&lt;bits/stdc++.h&gt;</span> <span class="comment">// map按值value排序</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">Mixficsol</span> &#123;</span><br><span class="line">  <span class="type">int</span> num;</span><br><span class="line">  <span class="type">int</span> i;</span><br><span class="line">&#125; Mix;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> pair&lt;Mix,<span class="type">int</span>&gt; PAIR;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Cmp</span> &#123;</span><br><span class="line">  <span class="function"><span class="type">bool</span> <span class="title">operator</span> <span class="params">()</span> <span class="params">(Mix <span class="type">const</span> &amp;a, Mix <span class="type">const</span> &amp;b)</span> <span class="type">const</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (a.num != b.num) &#123;</span><br><span class="line">      <span class="keyword">return</span> a.num &lt; b.num; <span class="comment">// key.num按照正序排列</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> a.i &gt; b.i; <span class="comment">// num相同按照key.i正序排列</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[])</span> </span>&#123;</span><br><span class="line">  ios_base::<span class="built_in">sync_with_stdio</span>(<span class="literal">false</span>);</span><br><span class="line">  cin.<span class="built_in">tie</span>(<span class="literal">nullptr</span>);</span><br><span class="line">  <span class="built_in">srand</span>((<span class="type">unsigned</span>)<span class="built_in">time</span>(<span class="literal">NULL</span>));</span><br><span class="line">  multimap&lt;Mix,<span class="type">int</span>,Cmp&gt; mp;</span><br><span class="line">  <span class="type">int</span> n, a, b;</span><br><span class="line">  cin &gt;&gt; n;</span><br><span class="line">  Mix M;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line">    a = <span class="built_in">rand</span>() % <span class="number">4</span>;</span><br><span class="line">    b = <span class="built_in">rand</span>() % <span class="number">4</span>;</span><br><span class="line">    M.num = a;</span><br><span class="line">    M.i = b;</span><br><span class="line">    mp.<span class="built_in">insert</span>(<span class="built_in">pair</span>&lt;Mix,<span class="type">int</span>&gt;(M,i));</span><br><span class="line">  &#125;</span><br><span class="line">  map&lt;Mix,<span class="type">int</span>&gt;::iterator iter;</span><br><span class="line">  cout &lt;&lt; <span class="string">&quot;排序后: &quot;</span> &lt;&lt; endl;</span><br><span class="line">  <span class="keyword">for</span> (iter = mp.<span class="built_in">begin</span>(); iter != mp.<span class="built_in">end</span>(); iter++) &#123;</span><br><span class="line">    cout &lt;&lt; iter-&gt;first.num &lt;&lt; <span class="string">&quot; | &quot;</span> &lt;&lt; iter-&gt;first.i &lt;&lt; <span class="string">&quot; | &quot;</span> &lt;&lt; iter-&gt;second &lt;&lt; endl;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<img width="927" alt="截屏2021-10-22 11 34 12" src="https://user-images.githubusercontent.com/73943232/138389292-0909b573-dcb7-4051-9492-10f341b69bcc.png">
+
+
+
+<h2 id="map结构体排序"><a href="#map结构体排序" class="headerlink" title="map结构体排序"></a>map结构体排序</h2><blockquote>
+<p>之前说过map属于集合容器是不能进行sort排序的，要排序的话得用vector进行排序，这里就用到了vector，我们去定义一个bool cmp去设置我们需要的排序方式<br> (bool cmp一般是放在sort里面的，而struct cmp是放在构造容器时里面的）我们把map放进vector里面然后排序就得到了结果.</p>
+</blockquote>
+ <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"> <span class="meta">#<span class="keyword">include</span> <span class="string">&lt;bits/stdc++.h&gt;</span> <span class="comment">// map按值value排序</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">Mixficsol</span> &#123;</span><br><span class="line">  <span class="type">int</span> num;</span><br><span class="line">  <span class="type">int</span> i;</span><br><span class="line">&#125; Mix;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> pair&lt;Mix,<span class="type">int</span>&gt; PAIR;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Cmp</span> &#123;</span><br><span class="line">  <span class="function"><span class="type">bool</span> <span class="title">operator</span> <span class="params">()</span> <span class="params">(Mix <span class="type">const</span> &amp;a, Mix <span class="type">const</span> &amp;b)</span> <span class="type">const</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (a.num != b.num) &#123;</span><br><span class="line">      <span class="keyword">return</span> a.num &lt; b.num; <span class="comment">// key.num按照正序排列</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> a.i &lt; b.i; <span class="comment">// num相同按照key.i正序排列</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">bool</span> <span class="title">cmp</span><span class="params">(PAIR <span class="type">const</span> &amp;a, PAIR <span class="type">const</span> &amp;b)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (a.first.num != b.first.num) &#123;</span><br><span class="line">    <span class="keyword">return</span> a.first.num &lt; b.first.num;</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     <span class="keyword">if</span> (a.first.i != b.first.i) &#123;</span><br><span class="line">       <span class="keyword">return</span> a.first.i &lt; b.first.i;</span><br><span class="line">     &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">       <span class="keyword">return</span> a.second &gt; b.second; <span class="comment">//key值相同按照value(i)倒序排列</span></span><br><span class="line">     &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[])</span> </span>&#123;</span><br><span class="line">  ios_base::<span class="built_in">sync_with_stdio</span>(<span class="literal">false</span>);</span><br><span class="line">  cin.<span class="built_in">tie</span>(<span class="literal">nullptr</span>);</span><br><span class="line">  <span class="built_in">srand</span>((<span class="type">unsigned</span>)<span class="built_in">time</span>(<span class="literal">NULL</span>));</span><br><span class="line">  multimap&lt;Mix,<span class="type">int</span>,Cmp&gt; mp;</span><br><span class="line">  <span class="type">int</span> n, a, b;</span><br><span class="line">  cin &gt;&gt; n;</span><br><span class="line">  Mix M;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line">    a = <span class="built_in">rand</span>() % <span class="number">4</span>;</span><br><span class="line">    b = <span class="built_in">rand</span>() % <span class="number">4</span>;</span><br><span class="line">    M.num = a;</span><br><span class="line">    M.i = b;</span><br><span class="line">    mp.<span class="built_in">insert</span>(<span class="built_in">pair</span>&lt;Mix,<span class="type">int</span>&gt;(M,i));</span><br><span class="line">  &#125;</span><br><span class="line">  map&lt;Mix,<span class="type">int</span>&gt;::iterator iter;</span><br><span class="line">  cout &lt;&lt; <span class="string">&quot;排序前: &quot;</span> &lt;&lt; endl;</span><br><span class="line">  <span class="keyword">for</span> (iter = mp.<span class="built_in">begin</span>(); iter != mp.<span class="built_in">end</span>(); iter++) &#123;</span><br><span class="line">    cout &lt;&lt; iter-&gt;first.num &lt;&lt; <span class="string">&quot; | &quot;</span> &lt;&lt; iter-&gt;first.i &lt;&lt; <span class="string">&quot; | &quot;</span> &lt;&lt; iter-&gt;second &lt;&lt; endl;</span><br><span class="line">  &#125;</span><br><span class="line">  cout &lt;&lt; <span class="string">&quot;排序后: &quot;</span> &lt;&lt; endl;</span><br><span class="line">  <span class="function">vector&lt;PAIR&gt; <span class="title">v</span><span class="params">(mp.begin(), mp.end())</span></span>;</span><br><span class="line">  <span class="built_in">sort</span>(v.<span class="built_in">begin</span>(), v.<span class="built_in">end</span>(), cmp);</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; v.<span class="built_in">size</span>(); i++) &#123;</span><br><span class="line">    cout &lt;&lt; v[i].first.num &lt;&lt; <span class="string">&quot; | &quot;</span> &lt;&lt; v[i].first.i &lt;&lt; <span class="string">&quot; | &quot;</span> &lt;&lt; v[i].second &lt;&lt; endl;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<img width="969" alt="截屏2021-10-22 11 35 08" src="https://user-images.githubusercontent.com/73943232/138389364-81857b7f-d1d1-439c-b9f2-4f524c3221b6.png">
+
+
+<h2 id="set构造排序"><a href="#set构造排序" class="headerlink" title="set构造排序"></a>set构造排序</h2><blockquote>
+<p>set的构造排序和map一样，这里就不说了下面有两个例子</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;bits/stdc++.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[])</span> </span>&#123;</span><br><span class="line">  ios_base::<span class="built_in">sync_with_stdio</span>(<span class="literal">false</span>);</span><br><span class="line">  cin.<span class="built_in">tie</span>(<span class="literal">nullptr</span>);</span><br><span class="line">  <span class="built_in">srand</span>((<span class="type">unsigned</span>)<span class="built_in">time</span>(<span class="literal">NULL</span>));</span><br><span class="line">  <span class="type">int</span> a;</span><br><span class="line">  set&lt;<span class="type">int</span>&gt; s;</span><br><span class="line">  set&lt;<span class="type">int</span>, less&lt;<span class="type">int</span>&gt; &gt; s1;</span><br><span class="line">  set&lt;<span class="type">int</span>, greater&lt;<span class="type">int</span>&gt; &gt; s2;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">5</span>; i++) &#123;</span><br><span class="line">    a = <span class="built_in">rand</span>() % <span class="number">4</span>;</span><br><span class="line">    s.<span class="built_in">insert</span>(a);</span><br><span class="line">  &#125;</span><br><span class="line">  set&lt;<span class="type">int</span>&gt;::iterator iter;</span><br><span class="line">  <span class="keyword">for</span> (iter = s.<span class="built_in">begin</span>(); iter != s.<span class="built_in">end</span>(); iter++) &#123;</span><br><span class="line">    cout &lt;&lt; *iter &lt;&lt; <span class="string">&#x27; &#x27;</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;bits/stdc++.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">bool</span> <span class="title">cmp</span><span class="params">(string <span class="type">const</span>&amp; a, string <span class="type">const</span>&amp; b)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> a.<span class="built_in">size</span>() &gt; b.<span class="built_in">size</span>();	  <span class="comment">// 按照字符串的大小进行倒序排列即size大的排列在前面</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[])</span> </span>&#123;</span><br><span class="line">  ios_base::<span class="built_in">sync_with_stdio</span>(<span class="literal">false</span>);</span><br><span class="line">  cin.<span class="built_in">tie</span>(<span class="literal">nullptr</span>);</span><br><span class="line">  set&lt;string, greater&lt;string&gt; &gt; s; <span class="comment">// 按照string的字典序倒序排列</span></span><br><span class="line">  set&lt;string, less&lt;string&gt; &gt; s1; <span class="comment">// 按照string的字典序顺序排列(默认是使用less)</span></span><br><span class="line">  set&lt;string&gt; s2; <span class="comment">// 按照string的字典序顺序排列	</span></span><br><span class="line">  s.<span class="built_in">insert</span>(<span class="string">&quot;abcd&quot;</span>);</span><br><span class="line">  s.<span class="built_in">insert</span>(<span class="string">&quot;dcba&quot;</span>);</span><br><span class="line">  s.<span class="built_in">insert</span>(<span class="string">&quot;123456&quot;</span>);</span><br><span class="line">  <span class="function">vector&lt;string&gt; <span class="title">v</span><span class="params">(s.begin(),s.end())</span></span>; <span class="comment">// 由于set不是顺序容器所以得先存入vector进行排序</span></span><br><span class="line">  <span class="built_in">sort</span>(v.<span class="built_in">begin</span>(), v.<span class="built_in">end</span>(), cmp);</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; v.<span class="built_in">size</span>(); i++) &#123;</span><br><span class="line">    cout &lt;&lt; v[i] &lt;&lt; endl;  <span class="comment">// 最终的排序结果是字符串大的排列在最前面，字符串长度一样的按照字典序进行倒序排列</span></span><br><span class="line">  &#125;</span><br><span class="line">  cout &lt;&lt; s.<span class="built_in">size</span>() &lt;&lt; endl;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="练习"><a href="#练习" class="headerlink" title="练习"></a>练习</h2><blockquote>
+<p>为了检测自己是否真的弄懂了，我想了个题目，就是学生成绩进行排序，我的想法是成绩按照倒序排列就是成绩高的学生在前面，成绩相同就按照名字的长度进行<br> 排序，名字长度大的在前面，名字长度一样的就按照名字的字典序排序，下面就是我写的代码</p>
+</blockquote>
+ <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"> <span class="meta">#<span class="keyword">include</span> <span class="string">&lt;bits/stdc++.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> INF 0x7fffffff</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> rep(x, y, z) for (int x = y; x &lt;= z; x++)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> dec(x, y, z) for (int x = y; x &gt;= z; x--)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> format(a) memset (a, 0, sizeof(a))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> swap(a, b) (a ^= b ^= a ^= b)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ll long long int</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ull unsigned long long int </span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> uint unsigned int</span></span><br><span class="line"><span class="type">const</span> <span class="type">int</span> maxn = <span class="number">1e6</span> + <span class="number">10</span>;</span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">student</span> &#123;</span><br><span class="line">  <span class="type">int</span> grade;</span><br><span class="line">  string name;</span><br><span class="line">&#125;stu;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">cmp</span> &#123;</span><br><span class="line">  <span class="function"><span class="type">bool</span> <span class="title">operator</span> <span class="params">()</span> <span class="params">(stu <span class="type">const</span> &amp;a, stu <span class="type">const</span> &amp;b)</span> <span class="type">const</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (a.grade != b.grade) &#123;</span><br><span class="line">      <span class="keyword">return</span> a.grade &gt; b.grade; <span class="comment">// 成绩按照倒序排列</span></span><br><span class="line">    &#125; </span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (a.name.<span class="built_in">size</span>() != b.name.<span class="built_in">size</span>()) &#123; <span class="comment">// 成绩一样按照名字长度排序,长度大的排在前面</span></span><br><span class="line">      <span class="keyword">return</span> a.name.<span class="built_in">size</span>() &gt; b.name.<span class="built_in">size</span>();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> a.name &lt; b.name; <span class="comment">// 长度一样按照字典序排序，字典序小的排在前面</span></span><br><span class="line">    &#125; </span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[])</span> </span>&#123;</span><br><span class="line">  ios_base::<span class="built_in">sync_with_stdio</span>(<span class="literal">false</span>);</span><br><span class="line">  cin.<span class="built_in">tie</span>(<span class="literal">nullptr</span>);</span><br><span class="line">  <span class="type">int</span> n;</span><br><span class="line">  stu Stu;</span><br><span class="line">  cin &gt;&gt; n;</span><br><span class="line">  set&lt;stu,cmp&gt; s;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line">    cin &gt;&gt; Stu.name &gt;&gt; Stu.grade;</span><br><span class="line">    s.<span class="built_in">insert</span>(Stu);</span><br><span class="line">  &#125;</span><br><span class="line">  set&lt;stu,cmp&gt;::iterator iter;</span><br><span class="line">  <span class="keyword">for</span> (iter = s.<span class="built_in">begin</span>(); iter != s.<span class="built_in">end</span>(); iter++) &#123;</span><br><span class="line">    cout &lt;&lt; iter-&gt;name &lt;&lt; <span class="string">&#x27; &#x27;</span> &lt;&lt; iter-&gt;grade &lt;&lt; endl;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<img width="963" alt="截屏2021-10-22 11 37 26" src="https://user-images.githubusercontent.com/73943232/138389589-4ccb162b-a0de-4e90-aca3-8124720133ff.png">
+
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><blockquote>
+<p>对于关联容器的排序可以说今天算搞懂了吧，有几个要注意的点是</p>
+<p>1.bool cmp是放在sort里面的，而sturct cmp是放在构造容器时里面的</p>
+<p>2.less是升序，greater是降序</p>
+<p>3.less和greater在构造容器时只能写入一个</p>
+<p>4.重载&lt;和重载()所对应的X &lt; Y排序不同，在重载&lt;时，x &lt; y代表是升序，而在重载()时x &lt; y代表的是降序</p>
+</blockquote>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/17/C++%20%E9%87%8D%E8%BD%BD%E7%AC%A6%E5%8F%B7%E4%BB%A5%E5%8F%8A%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%92%E5%BA%8F/" data-id="clgk8tj9t000363rf30e14qhg" data-title="C++重载符号以及自定义排序" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/blog/" rel="tag">blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2023/04/17/Acwing92/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Acwing92
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2023/04/16/hello-world/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Hello World</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/README/" rel="tag">README</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/blog/" rel="tag">blog</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/README/" style="font-size: 10px;">README</a> <a href="/tags/algorithm/" style="font-size: 20px;">algorithm</a> <a href="/tags/blog/" style="font-size: 15px;">blog</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/04/17/poj2418(map%E8%BE%93%E5%87%BA%E5%AD%97%E7%AC%A6%E4%B8%B2)/">poj2418(map输出字符串)</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/17/poj3041%E5%8C%88%E7%89%99%E5%88%A9%E7%AE%97%E6%B3%95%E6%9C%80%E5%B0%8F%E8%B7%AF%E5%BE%84%E8%A6%86%E7%9B%96/">poj3041</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/17/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0/">数据库连接池</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/17/%E9%93%BE%E5%BC%8F%E5%89%8D%E5%90%91%E6%98%9F%E5%AD%98%E5%9B%BE/">链式前向星存图</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/17/hdu2193(AVL%E6%A0%91%E7%9A%84%E9%AB%98%E5%BA%A6)/">hdu2193(AVL树的高度)</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

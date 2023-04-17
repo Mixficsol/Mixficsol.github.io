@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>poj2418(map输出字符串) | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="日期 2022 &#x2F; 04 &#x2F; 20   题目Hardwood Species Time Limit: 10000MS		Memory Limit: 65536K Total Submissions: 30559		Accepted: 11430  Description Hardwoods are the botanical group of trees that have b">
+<meta property="og:type" content="article">
+<meta property="og:title" content="poj2418(map输出字符串)">
+<meta property="og:url" content="http://example.com/2023/04/17/poj2418(map%E8%BE%93%E5%87%BA%E5%AD%97%E7%AC%A6%E4%B8%B2)/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="日期 2022 &#x2F; 04 &#x2F; 20   题目Hardwood Species Time Limit: 10000MS		Memory Limit: 65536K Total Submissions: 30559		Accepted: 11430  Description Hardwoods are the botanical group of trees that have b">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://user-images.githubusercontent.com/73943232/164135811-b88f2243-b904-4e99-ae00-dc5667d63568.png">
+<meta property="article:published_time" content="2023-04-17T02:24:04.018Z">
+<meta property="article:modified_time" content="2023-04-17T02:40:48.627Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="algorithm">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/73943232/164135811-b88f2243-b904-4e99-ae00-dc5667d63568.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-poj2418(map输出字符串)" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/04/17/poj2418(map%E8%BE%93%E5%87%BA%E5%AD%97%E7%AC%A6%E4%B8%B2)/" class="article-date">
+  <time class="dt-published" datetime="2023-04-17T02:24:04.018Z" itemprop="datePublished">2023-04-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      poj2418(map输出字符串)
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>日期 2022 &#x2F; 04 &#x2F; 20</p>
+<img width="1168" alt="截屏2022-04-20 10 37 12" src="https://user-images.githubusercontent.com/73943232/164135811-b88f2243-b904-4e99-ae00-dc5667d63568.png">
+
+<h1 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h1><h2 id="Hardwood-Species"><a href="#Hardwood-Species" class="headerlink" title="Hardwood Species"></a>Hardwood Species</h2><blockquote>
+<p>Time Limit: 10000MS		Memory Limit: 65536K</p>
+<p>Total Submissions: 30559		Accepted: 11430</p>
+</blockquote>
+<h3 id="Description"><a href="#Description" class="headerlink" title="Description"></a>Description</h3><blockquote>
+<p>Hardwoods are the botanical group of trees that have broad leaves, produce a fruit or nut, and generally go dormant in the winter.<br>America’s temperate climates produce forests with hundreds of hardwood species – trees that share certain biological characteristics. Although oak, maple and cherry all are types of hardwood trees, for example, they are different species. Together, all the hardwood species represent 40 percent of the trees in the United States.<br>On the other hand, softwoods, or conifers, from the Latin word meaning “cone-bearing,” have needles. Widely available US softwoods include cedar, fir, hemlock, pine, redwood, spruce and cypress. In a home, the softwoods are used primarily as structural lumber such as 2x4s and 2x6s, with some limited decorative applications.<br>Using satellite imaging technology, the Department of Natural Resources has compiled an inventory of every tree standing on a particular day. You are to compute the total fraction of the tree population represented by each species.</p>
+</blockquote>
+<h3 id="Input"><a href="#Input" class="headerlink" title="Input"></a>Input</h3><blockquote>
+<p>Input to your program consists of a list of the species of every tree observed by the satellite; one tree per line. No species name exceeds 30 characters. There are no more than 10,000 species and no more than 1,000,000 trees.</p>
+</blockquote>
+<h3 id="Output"><a href="#Output" class="headerlink" title="Output"></a>Output</h3><blockquote>
+<p>Print the name of each species represented in the population, in alphabetical order, followed by the percentage of the population it represents, to 4 decimal places.</p>
+</blockquote>
+<h3 id="Sample-Input"><a href="#Sample-Input" class="headerlink" title="Sample Input"></a>Sample Input</h3><blockquote>
+<p>Red Alder</p>
+<p>Ash</p>
+<p>Aspen</p>
+<p>Basswood</p>
+<p>Ash</p>
+<p>Beech</p>
+<p>Yellow Birch</p>
+<p>Ash</p>
+<p>Cherry</p>
+<p>Cottonwood</p>
+<p>Ash</p>
+<p>Cypress</p>
+<p>Red Elm</p>
+<p>Gum</p>
+<p>Hackberry</p>
+<p>White Oak</p>
+<p>Hickory</p>
+<p>Pecan</p>
+<p>Hard Maple</p>
+<p>White Oak</p>
+<p>Soft Maple</p>
+<p>Red Oak</p>
+<p>Red Oak</p>
+<p>White Oak</p>
+<p>Poplan</p>
+<p>Sassafras</p>
+<p>Sycamore</p>
+<p>Black Walnut</p>
+<p>Willow</p>
+</blockquote>
+<h3 id="Sample-Output"><a href="#Sample-Output" class="headerlink" title="Sample Output"></a>Sample Output</h3><blockquote>
+<p>Ash 13.7931</p>
+<p>Aspen 3.4483</p>
+<p>Basswood 3.4483</p>
+<p>Beech 3.4483</p>
+<p>Black Walnut 3.4483</p>
+<p>Cherry 3.4483</p>
+<p>Cottonwood 3.4483</p>
+<p>Cypress 3.4483</p>
+<p>Gum 3.4483</p>
+<p>Hackberry 3.4483</p>
+<p>Hard Maple 3.4483</p>
+<p>Hickory 3.4483</p>
+<p>Pecan 3.4483</p>
+<p>Poplan 3.4483</p>
+<p>Red Alder 3.4483</p>
+<p>Red Elm 3.4483</p>
+<p>Red Oak 6.8966</p>
+<p>Sassafras 3.4483</p>
+<p>Soft Maple 3.4483</p>
+<p>Sycamore 3.4483</p>
+<p>White Oak 10.3448</p>
+<p>Willow 3.4483</p>
+<p>Yellow Birch 3.4483</p>
+</blockquote>
+<h2 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h2><blockquote>
+<p>题目的大意就是给出若干个字符串，然后输出各个字符串的占比，结果保留到小数点后4位，思路很简单，就是利用一个map容器进行存储，cnt计数，问题在于这个输入的结束怎么表示<br>这里用的是getline(cin,s)读到文件尾结束，还有一个问题就是map不能输出string类型的字符串，然后网上查了一下可以用c_str()这个成员方法输出.</p>
+</blockquote>
+<h2 id="代码演示"><a href="#代码演示" class="headerlink" title="代码演示"></a>代码演示</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;map&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;string&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  map&lt;string, <span class="type">double</span>&gt; m;</span><br><span class="line">  map&lt;string, <span class="type">double</span>&gt;::iterator iter;</span><br><span class="line">  string s;</span><br><span class="line">  <span class="type">int</span> cnt = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">while</span> (<span class="built_in">getline</span>(cin, s)) &#123;</span><br><span class="line">    m[s]++;</span><br><span class="line">    cnt++;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">for</span> (iter = m.<span class="built_in">begin</span>(); iter != m.<span class="built_in">end</span>(); iter++) &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%s %.4f\n&quot;</span>, (iter-&gt;first).<span class="built_in">c_str</span>(), (iter-&gt;second) * <span class="number">100.0</span> / cnt);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/17/poj2418(map%E8%BE%93%E5%87%BA%E5%AD%97%E7%AC%A6%E4%B8%B2)/" data-id="clgk8tjad001x63rf9es1dou2" data-title="poj2418(map输出字符串)" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2023/04/17/poj3041%E5%8C%88%E7%89%99%E5%88%A9%E7%AE%97%E6%B3%95%E6%9C%80%E5%B0%8F%E8%B7%AF%E5%BE%84%E8%A6%86%E7%9B%96/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">poj3041</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/README/" rel="tag">README</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/blog/" rel="tag">blog</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/README/" style="font-size: 10px;">README</a> <a href="/tags/algorithm/" style="font-size: 20px;">algorithm</a> <a href="/tags/blog/" style="font-size: 15px;">blog</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/04/17/poj2418(map%E8%BE%93%E5%87%BA%E5%AD%97%E7%AC%A6%E4%B8%B2)/">poj2418(map输出字符串)</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/17/poj3041%E5%8C%88%E7%89%99%E5%88%A9%E7%AE%97%E6%B3%95%E6%9C%80%E5%B0%8F%E8%B7%AF%E5%BE%84%E8%A6%86%E7%9B%96/">poj3041</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/17/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0/">数据库连接池</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/17/%E9%93%BE%E5%BC%8F%E5%89%8D%E5%90%91%E6%98%9F%E5%AD%98%E5%9B%BE/">链式前向星存图</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/17/hdu2193(AVL%E6%A0%91%E7%9A%84%E9%AB%98%E5%BA%A6)/">hdu2193(AVL树的高度)</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
