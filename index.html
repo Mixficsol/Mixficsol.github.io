@@ -71,10 +71,10 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-Test" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+    <article id="post-链式前向星存图" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
-    <a href="/2023/04/17/Test/" class="article-date">
-  <time class="dt-published" datetime="2023-04-17T03:30:03.467Z" itemprop="datePublished">2023-04-17</time>
+    <a href="/2023/04/17/%E9%93%BE%E5%BC%8F%E5%89%8D%E5%90%91%E6%98%9F%E5%AD%98%E5%9B%BE/" class="article-date">
+  <time class="dt-published" datetime="2023-04-17T03:36:29.835Z" itemprop="datePublished">2023-04-17</time>
 </a>
     
   </div>
@@ -85,7 +85,144 @@
         
   
     <h1 itemprop="name">
-      <a class="p-name article-title" href="/2023/04/17/Test/">让首页显示部分内容</a>
+      <a class="p-name article-title" href="/2023/04/17/%E9%93%BE%E5%BC%8F%E5%89%8D%E5%90%91%E6%98%9F%E5%AD%98%E5%9B%BE/">链式前向星存图</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>日期 2022 &#x2F; 03 &#x2F; 23</p>
+<blockquote>
+<p>如果说邻接表是不好写但效率好，邻接矩阵是好写但效率低的话，前向星就是一个相对中庸的数据结构。<br>前向星固然好写，但效率并不高。而在优化为链式前向星后，效率也得到了较大的提升。虽然说，世界<br>上对链式前向星的使用并不是很广泛，但在不愿意写复杂的邻接表的情况下，链式前向星也是一个很优<br>秀的数据结构。</p>
+<p>链式前向星其实就是静态建立的邻接表，时间效率为O(m)，空间效率也为O(m)。遍历效率也为O(m)。</p>
+<p>Next，表示与这个边起点相同的上一条边的编号。</p>
+<p>head[i]数组，表示以 i 为起点的最后一条边的编号。</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;bits/stdc++.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> INF 0x7fffffff</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> rep(x, y, z) for (int x = y; x &lt;= z; x++)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> dec(x, y, z) for (int x = y; x &gt;= z; x--)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> format(a) memset (a, 0, sizeof(a))</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> swap(a, b) (a ^= b ^= a ^= b)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ll long long int</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ull unsigned long long int </span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> uint unsigned int</span></span><br><span class="line"><span class="type">const</span> <span class="type">int</span> maxn = <span class="number">1e6</span> + <span class="number">10</span>;</span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"><span class="type">int</span> cnt;</span><br><span class="line"><span class="type">int</span> head[maxn];</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Edge</span> &#123;</span><br><span class="line">  <span class="type">int</span> to, w, next; <span class="comment">// 终点,边权，同起点的上一条边的编号</span></span><br><span class="line">&#125; edge[maxn]; <span class="comment">//边集</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">Add_Edge</span><span class="params">(<span class="type">int</span> u, <span class="type">int</span> v, <span class="type">int</span> w)</span> </span>&#123;</span><br><span class="line">  edge[cnt].to = v; <span class="comment">// 终点</span></span><br><span class="line">  edge[cnt].w = w; <span class="comment">//权值</span></span><br><span class="line">  edge[cnt].next = head[u]; <span class="comment">//以u为起点上一条边的编号，也就是与这个边起点相同的上一条边的编号</span></span><br><span class="line">  head[u] = cnt++; <span class="comment">//更新以u为起点上一条边的编号</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[])</span> </span>&#123;</span><br><span class="line">  ios_base::<span class="built_in">sync_with_stdio</span>(<span class="literal">false</span>);</span><br><span class="line">  cin.<span class="built_in">tie</span>(<span class="literal">nullptr</span>);</span><br><span class="line">  <span class="type">int</span> n, m;</span><br><span class="line">  cin &gt;&gt; n &gt;&gt; m;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt;= n; i++) &#123;</span><br><span class="line">    head[i] = <span class="number">-1</span>; <span class="comment">// 初始化	</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">1</span>; i &lt;= m; i++) &#123;</span><br><span class="line">    <span class="type">int</span> x, y, z;</span><br><span class="line">    cin &gt;&gt; x &gt;&gt; y &gt;&gt; z;</span><br><span class="line">    <span class="built_in">Add_Edge</span>(x, y, z);	</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">1</span>; i &lt;= n; i++) &#123;</span><br><span class="line">    cout &lt;&lt; i &lt;&lt; endl;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> j = head[i]; j != <span class="number">-1</span>; j = edge[j].next) &#123;</span><br><span class="line">      cout &lt;&lt; i &lt;&lt; <span class="string">&#x27; &#x27;</span> &lt;&lt; edge[j].to &lt;&lt; <span class="string">&#x27; &#x27;</span> &lt;&lt; edge[j].w &lt;&lt; endl;</span><br><span class="line">    &#125;</span><br><span class="line">    cout &lt;&lt; endl;	</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">5 7</span></span><br><span class="line"><span class="comment">1 2 1</span></span><br><span class="line"><span class="comment">2 3 2</span></span><br><span class="line"><span class="comment">3 4 3</span></span><br><span class="line"><span class="comment">1 3 4</span></span><br><span class="line"><span class="comment">4 1 5</span></span><br><span class="line"><span class="comment">1 5 6</span></span><br><span class="line"><span class="comment">4 5 7</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/17/%E9%93%BE%E5%BC%8F%E5%89%8D%E5%90%91%E6%98%9F%E5%AD%98%E5%9B%BE/" data-id="clgkagq8f002269rfavqkf8pl" data-title="链式前向星存图" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-poj2418(map输出字符串)" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/04/17/poj2418(map%E8%BE%93%E5%87%BA%E5%AD%97%E7%AC%A6%E4%B8%B2)/" class="article-date">
+  <time class="dt-published" datetime="2023-04-17T03:36:29.834Z" itemprop="datePublished">2023-04-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/04/17/poj2418(map%E8%BE%93%E5%87%BA%E5%AD%97%E7%AC%A6%E4%B8%B2)/">poj2418(map输出字符串)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>日期 2022 &#x2F; 04 &#x2F; 20</p>
+        
+          <p class="article-more-link">
+            <a href="/2023/04/17/poj2418(map%E8%BE%93%E5%87%BA%E5%AD%97%E7%AC%A6%E4%B8%B2)/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/17/poj2418(map%E8%BE%93%E5%87%BA%E5%AD%97%E7%AC%A6%E4%B8%B2)/" data-id="clgkagq8e001y69rf47kufvoi" data-title="poj2418(map输出字符串)" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-poj3041匈牙利算法最小路径覆盖" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/04/17/poj3041%E5%8C%88%E7%89%99%E5%88%A9%E7%AE%97%E6%B3%95%E6%9C%80%E5%B0%8F%E8%B7%AF%E5%BE%84%E8%A6%86%E7%9B%96/" class="article-date">
+  <time class="dt-published" datetime="2023-04-17T03:36:29.834Z" itemprop="datePublished">2023-04-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/04/17/poj3041%E5%8C%88%E7%89%99%E5%88%A9%E7%AE%97%E6%B3%95%E6%9C%80%E5%B0%8F%E8%B7%AF%E5%BE%84%E8%A6%86%E7%9B%96/">poj3041</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>日期 2022&#x2F;03&#x2F;20</p>
+        
+          <p class="article-more-link">
+            <a href="/2023/04/17/poj3041%E5%8C%88%E7%89%99%E5%88%A9%E7%AE%97%E6%B3%95%E6%9C%80%E5%B0%8F%E8%B7%AF%E5%BE%84%E8%A6%86%E7%9B%96/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/17/poj3041%E5%8C%88%E7%89%99%E5%88%A9%E7%AE%97%E6%B3%95%E6%9C%80%E5%B0%8F%E8%B7%AF%E5%BE%84%E8%A6%86%E7%9B%96/" data-id="clgkagq8f002069rf1iz13y4j" data-title="poj3041" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-数据库连接池" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/04/17/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0/" class="article-date">
+  <time class="dt-published" datetime="2023-04-17T03:36:29.834Z" itemprop="datePublished">2023-04-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/04/17/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0/">数据库连接池</a>
     </h1>
   
 
@@ -95,12 +232,301 @@
       
         <span id="more"></span>
 
-<p>dafasdfasdf</p>
+<p>[参考链接】<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_36528311/article/details/87264571">https://blog.csdn.net/qq_36528311/article/details/87264571</a></p>
+<h2 id="问题的发现："><a href="#问题的发现：" class="headerlink" title="问题的发现："></a>问题的发现：</h2><blockquote>
+<p>在学校写web项目的登录功能的时候需要用到数据库的连接，想到之前自己写java项目的时候那个时候数据库连接使用的方法是每次请求就直接创建一个连接然后进行sql语句的进行，这次上网看到数据库连接池的技术，看完后想自己写一篇博客记录一下这项技术</p>
+</blockquote>
+<h2 id="1-为什么要用？"><a href="#1-为什么要用？" class="headerlink" title="1.为什么要用？"></a>1.为什么要用？</h2><blockquote>
+<p>背景：<br>用户的每一次请求都需要与数据库获得连接，然后数据库创建每一次连接都要消耗很大的资源并且创建的时间也很长</p>
+<p>问题：如果一个网站一天有几十万级别以上的访问量，那么数据库服务器就需要创建几十万次级别的连接，这就浪费了数据库的资源，容易导致数据库服务器内存溢出，拓机等等<br><img src="https://user-images.githubusercontent.com/73943232/158801407-917a47a7-d643-4191-b69d-829586fe6ac4.jpg" alt="传统数据库创建连接"></p>
+</blockquote>
+<h2 id="2-升级方案——数据库连接池"><a href="#2-升级方案——数据库连接池" class="headerlink" title="2.升级方案——数据库连接池"></a>2.升级方案——数据库连接池</h2><blockquote>
+<p>既然数据库的连接是一项非常耗资源的过程，对数据库连接的管理能影响到整个应用程序的伸缩性和健壮性那么数据库连接池就是对这个问题提出来的，数据库连接池负责分配，管理和释放数据库连接，它允许应用<br>程序重复使用一个现有的数据库连接，而不是每次需要时去创建<br><img src="https://user-images.githubusercontent.com/73943232/158801572-273818f8-4cb3-45fa-8709-9501532fb7bb.jpg" alt="数据库连接池创建连接"></p>
+</blockquote>
+<h2 id="3-数据库连接池的初始化"><a href="#3-数据库连接池的初始化" class="headerlink" title="3.数据库连接池的初始化"></a>3.数据库连接池的初始化</h2><blockquote>
+<p>数据库连接池在初始化时将创建一定数量的数据库连接放到连接池中，连接的数量是由最小数据库连接数决定的不管这些数据库连接是否被使用，连接池都将一直保证至少拥有这么多的连接数量.连接池的最大数据库连接数量<br>限定了这个连接池能占有的最大连接数当应用程序向连接池请求的连接数超过最大连接数量时，这些请求将被加入到等待队列中.定义：最小连接数:是连接池一直保持的数据库连接,所以如果应用程序对数据库连接的使用量不大,将会有大量的数据库连接资源被浪费.<br>最大连接数:是连接池能申请的最大连接数,如果数据库连接请求超过次数,后面的数据库连接请求将被加入到等待队列中,这会影响以后的数据库操作<br>如果最小连接数与最大连接数相差很大:那么最先连接请求将会获利,之后超过最小连接数量的连接请求等价于建立一个新的数据库连接.不过,这些大于最小连接数的数据库连接在使用完不会马上被释放,他将被放到连接池中等待重复使用或是空间超时后被释放.</p>
+</blockquote>
+<h2 id="4-数据库连接池接口"><a href="#4-数据库连接池接口" class="headerlink" title="4.数据库连接池接口"></a>4.数据库连接池接口</h2><blockquote>
+<p>编写连接池需实现java.sql.DataSource接口，这个接口定义了两个重载的getConnection方法：.Connection getConnection( ).Connection getConnection(String username,String password)</p>
+</blockquote>
+<h2 id="5-接口实现方法"><a href="#5-接口实现方法" class="headerlink" title="5.接口实现方法"></a>5.接口实现方法</h2><blockquote>
+<p>.Connection getConnection(String username,String password.Connection getConnection(String username,String password)<br>1.在DataSource构造函数中批量创建与数据库的连接，并把创建的连接利用LinkedList这个数据结构存起来</p>
+<p>2.每次调用getConnection这个方法时，就从LinkedList里面取到一个Connection返回给用户</p>
+<p>3.当用户使用完Connection，调用Connection.close()方法时，Collection对象应保证将自己返回到LinkedList中</p>
+</blockquote>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/04/17/Test/" data-id="clgka5pu00000ycrf4zba7p5b" data-title="让首页显示部分内容" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/04/17/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0/" data-id="clgkagq8g002469rf1udl5qo6" data-title="数据库连接池" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/blog/" rel="tag">blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-hdu4850(欧拉回路+构造)" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/04/17/hdu4850(%E6%AC%A7%E6%8B%89%E5%9B%9E%E8%B7%AF+%E6%9E%84%E9%80%A0)/" class="article-date">
+  <time class="dt-published" datetime="2023-04-17T03:36:29.833Z" itemprop="datePublished">2023-04-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/04/17/hdu4850(%E6%AC%A7%E6%8B%89%E5%9B%9E%E8%B7%AF+%E6%9E%84%E9%80%A0)/">hdu4850(欧拉回路)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>日期 2022 &#x2F; 03 &#x2F; 23</p>
+        
+          <p class="article-more-link">
+            <a href="/2023/04/17/hdu4850(%E6%AC%A7%E6%8B%89%E5%9B%9E%E8%B7%AF+%E6%9E%84%E9%80%A0)/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/17/hdu4850(%E6%AC%A7%E6%8B%89%E5%9B%9E%E8%B7%AF+%E6%9E%84%E9%80%A0)/" data-id="clgkagq8d001u69rf0xmufzb6" data-title="hdu4850(欧拉回路)" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-hello-world" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/04/17/hello-world/" class="article-date">
+  <time class="dt-published" datetime="2023-04-17T03:36:29.833Z" itemprop="datePublished">2023-04-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/04/17/hello-world/">Hello World</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
+        
+          <p class="article-more-link">
+            <a href="/2023/04/17/hello-world/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/17/hello-world/" data-id="clgkagq8e001w69rf4r0a1xyl" data-title="Hello World" class="article-share-link">Share</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-hdu3999(BST树)" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/04/17/hdu3999(BST%E6%A0%91)/" class="article-date">
+  <time class="dt-published" datetime="2023-04-17T03:36:29.832Z" itemprop="datePublished">2023-04-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/04/17/hdu3999(BST%E6%A0%91)/">hdu3999(BST树)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>日期 2022 &#x2F; 04 &#x2F; 11</p>
+        
+          <p class="article-more-link">
+            <a href="/2023/04/17/hdu3999(BST%E6%A0%91)/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/17/hdu3999(BST%E6%A0%91)/" data-id="clgkagq8c001q69rfe81h2rbn" data-title="hdu3999(BST树)" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-hdu4585(利用map排序)" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/04/17/hdu4585(%E5%88%A9%E7%94%A8map%E6%8E%92%E5%BA%8F)/" class="article-date">
+  <time class="dt-published" datetime="2023-04-17T03:36:29.832Z" itemprop="datePublished">2023-04-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/04/17/hdu4585(%E5%88%A9%E7%94%A8map%E6%8E%92%E5%BA%8F)/">hdu4584(利用map排序)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>日期 2022 &#x2F; 04 &#x2F; 22</p>
+        
+          <p class="article-more-link">
+            <a href="/2023/04/17/hdu4585(%E5%88%A9%E7%94%A8map%E6%8E%92%E5%BA%8F)/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/17/hdu4585(%E5%88%A9%E7%94%A8map%E6%8E%92%E5%BA%8F)/" data-id="clgkagq8d001s69rf2ia1bkgi" data-title="hdu4584(利用map排序)" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-hdu2612" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/04/17/hdu2612/" class="article-date">
+  <time class="dt-published" datetime="2023-04-17T03:36:29.831Z" itemprop="datePublished">2023-04-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/04/17/hdu2612/">hdu2613</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>日期 2021 &#x2F; 11 &#x2F; 3</p>
+        
+          <p class="article-more-link">
+            <a href="/2023/04/17/hdu2612/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/17/hdu2612/" data-id="clgkagq8b001k69rf8huq3cez" data-title="hdu2613" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-hdu2553" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/04/17/hdu2553/" class="article-date">
+  <time class="dt-published" datetime="2023-04-17T03:36:29.831Z" itemprop="datePublished">2023-04-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/04/17/hdu2553/">hdu2553</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>日期 2021 &#x2F; 10 &#x2F; 21</p>
+        
+          <p class="article-more-link">
+            <a href="/2023/04/17/hdu2553/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/17/hdu2553/" data-id="clgkagq8b001m69rfdc6920yg" data-title="hdu2553" class="article-share-link">Share</a>
       
       
       
@@ -116,6 +542,11 @@
   
 
 
+  <nav id="page-nav">
+    
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
+  </nav>
+
 </section>
         
           <aside id="sidebar">
@@ -127,7 +558,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li></ul>
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/README/" rel="tag">README</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/algorithm/" rel="tag">algorithm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/blog/" rel="tag">blog</a></li></ul>
     </div>
   </div>
 
@@ -137,7 +568,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/algorithm/" style="font-size: 10px;">algorithm</a>
+      <a href="/tags/README/" style="font-size: 10px;">README</a> <a href="/tags/algorithm/" style="font-size: 20px;">algorithm</a> <a href="/tags/blog/" style="font-size: 15px;">blog</a>
     </div>
   </div>
 
@@ -159,7 +590,23 @@
       <ul>
         
           <li>
-            <a href="/2023/04/17/Test/">让首页显示部分内容</a>
+            <a href="/2023/04/17/%E9%93%BE%E5%BC%8F%E5%89%8D%E5%90%91%E6%98%9F%E5%AD%98%E5%9B%BE/">链式前向星存图</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/17/poj2418(map%E8%BE%93%E5%87%BA%E5%AD%97%E7%AC%A6%E4%B8%B2)/">poj2418(map输出字符串)</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/17/poj3041%E5%8C%88%E7%89%99%E5%88%A9%E7%AE%97%E6%B3%95%E6%9C%80%E5%B0%8F%E8%B7%AF%E5%BE%84%E8%A6%86%E7%9B%96/">poj3041</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/17/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0/">数据库连接池</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/17/hdu4850(%E6%AC%A7%E6%8B%89%E5%9B%9E%E8%B7%AF+%E6%9E%84%E9%80%A0)/">hdu4850(欧拉回路)</a>
           </li>
         
       </ul>
