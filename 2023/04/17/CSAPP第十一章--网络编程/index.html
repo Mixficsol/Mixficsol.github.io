@@ -6,12 +6,12 @@
   
   <title>网络编程 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="CSAPP第十一章–网络编程11.1客户端-服务器编程模型 每个网络应用都是基于客户端-服务器模型的，一个应用是由一个服务器进程和一个或者多个客户端进程组成.服务器管理某种资源，并且通过操作这种资源来为它的客户端提供某种服务.例如，一个Web服务器管理着一组磁盘文件，它会代表客户端进行检索和执行.客户端-服务器模型中的基本操作是事务.一个客户端-服务器事务由以下四步组成： 1.当一个客户端需要服务">
+  <meta name="description" content="CSAPP第十一章–网络编程11.1客户端-服务器编程模型 每个网络应用都是基于客户端-服务器模型的，一个应用是由一个服务器进程和一个或者多个客户端进程组成.服务器管理某种资源，并且通过操作这种资源来为它的客户端提供某种服务.例如，一个Web服务器管理着一组磁盘文件，它会代表客户端进行检索和执行.客户端-服务器模型中的基本操作是事务.一个客户端-服务器事务由以下四步组成： 1.当一个客户端需要">
 <meta property="og:type" content="article">
 <meta property="og:title" content="网络编程">
 <meta property="og:url" content="http://example.com/2023/04/17/CSAPP%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0--%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="CSAPP第十一章–网络编程11.1客户端-服务器编程模型 每个网络应用都是基于客户端-服务器模型的，一个应用是由一个服务器进程和一个或者多个客户端进程组成.服务器管理某种资源，并且通过操作这种资源来为它的客户端提供某种服务.例如，一个Web服务器管理着一组磁盘文件，它会代表客户端进行检索和执行.客户端-服务器模型中的基本操作是事务.一个客户端-服务器事务由以下四步组成： 1.当一个客户端需要服务">
+<meta property="og:description" content="CSAPP第十一章–网络编程11.1客户端-服务器编程模型 每个网络应用都是基于客户端-服务器模型的，一个应用是由一个服务器进程和一个或者多个客户端进程组成.服务器管理某种资源，并且通过操作这种资源来为它的客户端提供某种服务.例如，一个Web服务器管理着一组磁盘文件，它会代表客户端进行检索和执行.客户端-服务器模型中的基本操作是事务.一个客户端-服务器事务由以下四步组成： 1.当一个客户端需要">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://user-images.githubusercontent.com/73943232/159924015-d236ebfb-b349-45de-bfb0-2d9fb76bfca8.jpg">
 <meta property="og:image" content="https://user-images.githubusercontent.com/73943232/159924023-b9d692a6-92d5-4eb9-a4e1-31a1c515af75.jpg">
@@ -20,7 +20,7 @@
 <meta property="og:image" content="https://user-images.githubusercontent.com/73943232/159924067-3a24dcbf-c1f1-4f3b-a225-1d3719b67e81.jpg">
 <meta property="og:image" content="https://user-images.githubusercontent.com/73943232/159924335-41848f19-11e5-431e-aea2-78a84dd08a83.jpg">
 <meta property="article:published_time" content="2023-04-17T02:24:04.013Z">
-<meta property="article:modified_time" content="2023-04-17T02:39:43.510Z">
+<meta property="article:modified_time" content="2023-04-17T02:59:37.266Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="blog">
 <meta name="twitter:card" content="summary">
@@ -103,7 +103,9 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h2 id="CSAPP第十一章–网络编程"><a href="#CSAPP第十一章–网络编程" class="headerlink" title="CSAPP第十一章–网络编程"></a>CSAPP第十一章–网络编程</h2><h3 id="11-1客户端-服务器编程模型"><a href="#11-1客户端-服务器编程模型" class="headerlink" title="11.1客户端-服务器编程模型"></a>11.1客户端-服务器编程模型</h3><blockquote>
+        <span id="more"></span>
+
+<h2 id="CSAPP第十一章–网络编程"><a href="#CSAPP第十一章–网络编程" class="headerlink" title="CSAPP第十一章–网络编程"></a>CSAPP第十一章–网络编程</h2><h3 id="11-1客户端-服务器编程模型"><a href="#11-1客户端-服务器编程模型" class="headerlink" title="11.1客户端-服务器编程模型"></a>11.1客户端-服务器编程模型</h3><blockquote>
 <p>每个网络应用都是基于客户端-服务器模型的，一个应用是由一个服务器进程和一个或者多个客户端进程组成.服务器管理某种资源，并且通过操作这种资源来为它的客户端提供某种服务.例如，一个Web服务器管理着一组磁盘文件，它会代表客户端进行检索和执行.客户端-服务器模型中的基本操作是事务.一个客户端-服务器事务由以下四步组成：</p>
 <p>1.当一个客户端需要服务时，它向服务器发送一个请求，发起一个事务.例如，当Web浏览器需要一个文件时，它就发送一个请求给Web服务器.</p>
 <p>2.服务器收到请求后，解释它，并以适当的方式操作它的资源.例如，当Web服务器收到浏览器发出的请求后，它就读一个磁盘文件.</p>
@@ -134,7 +136,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/04/17/CSAPP%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0--%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" data-id="clgk8tj9u000563rfaszm8tl6" data-title="网络编程" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/04/17/CSAPP%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0--%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" data-id="clgk91jn10003aprfbvd5fdx8" data-title="网络编程" class="article-share-link">Share</a>
       
       
       
@@ -146,11 +148,11 @@
     
 <nav id="article-nav">
   
-    <a href="/2023/04/17/LG3369(Treap%E6%A0%91%E6%A8%A1%E6%9D%BF)/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2023/04/17/hdu1241/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
-          LG3369(Treap树模版)
+          hdu1241
         
       </div>
     </a>

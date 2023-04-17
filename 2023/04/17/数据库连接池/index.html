@@ -6,17 +6,17 @@
   
   <title>数据库连接池 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="[参考链接】https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_36528311&#x2F;article&#x2F;details&#x2F;87264571 问题的发现： 在学校写web项目的登录功能的时候需要用到数据库的连接，想到之前自己写java项目的时候那个时候数据库连接使用的方法是每次请求就直接创建一个连接然后进行sql语句的进行，这次上网看到数据库连接池的技术，看完后想自己写一篇博客记录一下这项技术  1.为什么要">
+  <meta name="description" content="[参考链接】https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_36528311&#x2F;article&#x2F;details&#x2F;87264571 问题的发现： 在学校写web项目的登录功能的时候需要用到数据库的连接，想到之前自己写java项目的时候那个时候数据库连接使用的方法是每次请求就直接创建一个连接然后进行sql语句的进行，这次上网看到数据库连接池的技术，看完后想自己写一篇博客记录一下这项技术  1.为什">
 <meta property="og:type" content="article">
 <meta property="og:title" content="数据库连接池">
 <meta property="og:url" content="http://example.com/2023/04/17/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="[参考链接】https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_36528311&#x2F;article&#x2F;details&#x2F;87264571 问题的发现： 在学校写web项目的登录功能的时候需要用到数据库的连接，想到之前自己写java项目的时候那个时候数据库连接使用的方法是每次请求就直接创建一个连接然后进行sql语句的进行，这次上网看到数据库连接池的技术，看完后想自己写一篇博客记录一下这项技术  1.为什么要">
+<meta property="og:description" content="[参考链接】https:&#x2F;&#x2F;blog.csdn.net&#x2F;qq_36528311&#x2F;article&#x2F;details&#x2F;87264571 问题的发现： 在学校写web项目的登录功能的时候需要用到数据库的连接，想到之前自己写java项目的时候那个时候数据库连接使用的方法是每次请求就直接创建一个连接然后进行sql语句的进行，这次上网看到数据库连接池的技术，看完后想自己写一篇博客记录一下这项技术  1.为什">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://user-images.githubusercontent.com/73943232/158801407-917a47a7-d643-4191-b69d-829586fe6ac4.jpg">
 <meta property="og:image" content="https://user-images.githubusercontent.com/73943232/158801572-273818f8-4cb3-45fa-8709-9501532fb7bb.jpg">
 <meta property="article:published_time" content="2023-04-17T02:24:04.018Z">
-<meta property="article:modified_time" content="2023-04-17T02:39:22.200Z">
+<meta property="article:modified_time" content="2023-04-17T02:59:26.317Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="blog">
 <meta name="twitter:card" content="summary">
@@ -99,7 +99,9 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <p>[参考链接】<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_36528311/article/details/87264571">https://blog.csdn.net/qq_36528311/article/details/87264571</a></p>
+        <span id="more"></span>
+
+<p>[参考链接】<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_36528311/article/details/87264571">https://blog.csdn.net/qq_36528311/article/details/87264571</a></p>
 <h2 id="问题的发现："><a href="#问题的发现：" class="headerlink" title="问题的发现："></a>问题的发现：</h2><blockquote>
 <p>在学校写web项目的登录功能的时候需要用到数据库的连接，想到之前自己写java项目的时候那个时候数据库连接使用的方法是每次请求就直接创建一个连接然后进行sql语句的进行，这次上网看到数据库连接池的技术，看完后想自己写一篇博客记录一下这项技术</p>
 </blockquote>
@@ -125,7 +127,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/04/17/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0/" data-id="clgk8tjae002163rfa97c3ll4" data-title="数据库连接池" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/04/17/%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0/" data-id="clgk91jno0021aprf23kugm06" data-title="数据库连接池" class="article-share-link">Share</a>
       
       
       
