@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>Pika命令耗时统计功能技术文档 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="背景：Pika可以通过慢查询(Slowlog)来查询每个命令的执行时间，不过不能进行统计归类(例如多条set命令的执行情况会依次展示出来，没有统计功能)，并且Pika对各个命令的调用次数没有统计功能，只对总命令调用次数有统计功能。原因在于Pika没有实现Redis的info Commandstats命令，Redis的这个命令可以统计各个命令的耗时情况以及调用次数(以毫秒计)，Pika也需要支持这个">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Pika命令耗时统计功能技术文档">
+<meta property="og:url" content="http://example.com/2023/07/06/Pika%E5%91%BD%E4%BB%A4%E8%80%97%E6%97%B6%E7%BB%9F%E8%AE%A1%E5%8A%9F%E8%83%BD%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="背景：Pika可以通过慢查询(Slowlog)来查询每个命令的执行时间，不过不能进行统计归类(例如多条set命令的执行情况会依次展示出来，没有统计功能)，并且Pika对各个命令的调用次数没有统计功能，只对总命令调用次数有统计功能。原因在于Pika没有实现Redis的info Commandstats命令，Redis的这个命令可以统计各个命令的耗时情况以及调用次数(以毫秒计)，Pika也需要支持这个">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0518.16.25_64a542ff15f8a.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0518.28.48_64a545e64ed75.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.24.16_64a552e6699a8.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.19.03_64a551abbb23d.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.28.14_64a55430184ad.png">
+<meta property="article:published_time" content="2023-07-06T04:40:26.000Z">
+<meta property="article:modified_time" content="2023-07-12T12:37:44.755Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Blog">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0518.16.25_64a542ff15f8a.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-Pika命令耗时统计功能技术文档" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/07/06/Pika%E5%91%BD%E4%BB%A4%E8%80%97%E6%97%B6%E7%BB%9F%E8%AE%A1%E5%8A%9F%E8%83%BD%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/" class="article-date">
+  <time class="dt-published" datetime="2023-07-06T04:40:26.000Z" itemprop="datePublished">2023-07-06</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      Pika命令耗时统计功能技术文档
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="背景："><a href="#背景：" class="headerlink" title="背景："></a>背景：</h3><p>Pika可以通过慢查询(Slowlog)来查询每个命令的执行时间，不过不能进行统计归类(例如多条set命令的执行情况会依次展示出来，没有统计功能)，并且Pika对各个命令的调用次数没有统计功能，只对总命令调用次数有统计功能。原因在于Pika没有实现Redis的info Commandstats命令，Redis的这个命令可以统计各个命令的耗时情况以及调用次数(以毫秒计)，Pika也需要支持这个命令</p>
+<p>以下是Redis的Info Commandstats:</p>
+<p>其中cmdstat_set是命令名称，calls(命令调用次数)，usec(命令耗时)，usec_per_call(命令平均执行时间)</p>
+<p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0518.16.25_64a542ff15f8a.png" alt="截屏2023-07-05 18.16.25.png"></p>
+<h3 id="解决方案："><a href="#解决方案：" class="headerlink" title="解决方案："></a>解决方案：</h3><p>Pika目前已经支持慢查询命令只是没有统计的功能，我们可以用慢查询里面的对单个命令耗时统计功能函数，而Pika所有的命令都装在Cmd_table里面，我们可以用一个结构体放在Cmd基类中，里面封装calls，usec这两个变量来实现对命令的统计功能，执行info Commandstats命令时我们对相应的cmd判断，如果里面的calls不为0则展示其信息，避免对未调用过的命令进行不必要的展示。</p>
+<h3 id="关键代码改动："><a href="#关键代码改动：" class="headerlink" title="关键代码改动："></a>关键代码改动：</h3><h5 id="include-x2F-pika-command-h"><a href="#include-x2F-pika-command-h" class="headerlink" title="include&#x2F;pika_command.h"></a>include&#x2F;pika_command.h</h5><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0518.28.48_64a545e64ed75.png" alt="截屏2023-07-05 18.28.48.png"></p>
+<p>这里用cmd_count和cmd_time_consuming来统计对各个命令的总耗时和调用次数并初始化为0，利用原子变量避免多线程安全问题.</p>
+<h5 id="src-x2F-pika-client-conn-cc"><a href="#src-x2F-pika-client-conn-cc" class="headerlink" title="src&#x2F;pika_client_conn.cc"></a>src&#x2F;pika_client_conn.cc</h5><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.24.16_64a552e6699a8.png" alt="截屏2023-07-05 19.24.16.png"></p>
+<p>这里的c_ptr-&gt;Execute是命令的执行函数，在执行完这个函数后我们对时间进行统计，这里我用的慢查询那边的函数把结果存在duration中，然后从CmdTable中给相应的cmd的count和time_consuming修改值，从而实现功能.</p>
+<h5 id="src-x2F-pika-admin-cc"><a href="#src-x2F-pika-admin-cc" class="headerlink" title="src&#x2F;pika_admin.cc"></a>src&#x2F;pika_admin.cc</h5><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.19.03_64a551abbb23d.png" alt="截屏2023-07-05 19.19.03.png"></p>
+<p>这个是命令本身的实现逻辑，利用g_pika_cmd_table_manager-&gt;GetCmdTable()返回一个<code>&lt;std::string, std::unique_ptrcmd&gt;</code>的指针，遍历它判断每个命令的调用情况是否为0，是的话跳过不打印，否则打印出相应信息并留小数点后两位。</p>
+<h4 id="实现情况"><a href="#实现情况" class="headerlink" title="实现情况"></a>实现情况</h4><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.28.14_64a55430184ad.png" alt="截屏2023-07-05 19.28.14.png"></p>
+<p>我们将慢查询的参数<code>slowlog-log-slower-than</code>设置为0，来对每个命令的耗时进行查询，可见图中两次set的耗时分别是140ms和444ms两个值相加与我统计出来的usec的值584一样，平均耗时则为总耗时除以调用次数.</p>
+<p>issue: <a target="_blank" rel="noopener" href="https://github.com/OpenAtomFoundation/pika/issues/977">https://github.com/OpenAtomFoundation/pika/issues/977</a></p>
+<p>PR:<a target="_blank" rel="noopener" href="https://github.com/OpenAtomFoundation/pika/pull/1660">https://github.com/OpenAtomFoundation/pika/pull/1660</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/07/06/Pika%E5%91%BD%E4%BB%A4%E8%80%97%E6%97%B6%E7%BB%9F%E8%AE%A1%E5%8A%9F%E8%83%BD%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/" data-id="cljzq8buf0005serf604fdinf" data-title="Pika命令耗时统计功能技术文档" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Blackwidow代码解析
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2023/07/05/Pika%E5%91%BD%E4%BB%A4%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Pika命令处理流程源码分析</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blog/" style="font-size: 10px;">Blog</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/07/12/Redis%E5%91%BD%E4%BB%A4/">Redis命令</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/12/pika_exporter%E6%9C%AC%E5%9C%B0%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%96%87%E6%A1%A3/">Pika_exporter本地启动文档</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/">Blackwidow代码解析</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/06/Pika%E5%91%BD%E4%BB%A4%E8%80%97%E6%97%B6%E7%BB%9F%E8%AE%A1%E5%8A%9F%E8%83%BD%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/">Pika命令耗时统计功能技术文档</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/05/Pika%E5%91%BD%E4%BB%A4%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">Pika命令处理流程源码分析</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
