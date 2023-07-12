@@ -6,12 +6,12 @@
   
   <title>Pika命令耗时统计功能技术文档 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="背景：Pika可以通过慢查询(Slowlog)来查询每个命令的执行时间，不过不能进行统计归类(例如多条set命令的执行情况会依次展示出来，没有统计功能)，并且Pika对各个命令的调用次数没有统计功能，只对总命令调用次数有统计功能。原因在于Pika没有实现Redis的info Commandstats命令，Redis的这个命令可以统计各个命令的耗时情况以及调用次数(以毫秒计)，Pika也需要支持这个">
+  <meta name="description" content="背景：Pika可以通过慢查询(Slowlog)来查询每个命令的执行时间">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Pika命令耗时统计功能技术文档">
 <meta property="og:url" content="http://example.com/2023/07/06/Pika%E5%91%BD%E4%BB%A4%E8%80%97%E6%97%B6%E7%BB%9F%E8%AE%A1%E5%8A%9F%E8%83%BD%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="背景：Pika可以通过慢查询(Slowlog)来查询每个命令的执行时间，不过不能进行统计归类(例如多条set命令的执行情况会依次展示出来，没有统计功能)，并且Pika对各个命令的调用次数没有统计功能，只对总命令调用次数有统计功能。原因在于Pika没有实现Redis的info Commandstats命令，Redis的这个命令可以统计各个命令的耗时情况以及调用次数(以毫秒计)，Pika也需要支持这个">
+<meta property="og:description" content="背景：Pika可以通过慢查询(Slowlog)来查询每个命令的执行时间">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0518.16.25_64a542ff15f8a.png">
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0518.28.48_64a545e64ed75.png">
@@ -19,7 +19,7 @@
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.19.03_64a551abbb23d.png">
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.28.14_64a55430184ad.png">
 <meta property="article:published_time" content="2023-07-06T04:40:26.000Z">
-<meta property="article:modified_time" content="2023-07-12T12:37:44.755Z">
+<meta property="article:modified_time" content="2023-07-12T13:03:15.342Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Blog">
 <meta name="twitter:card" content="summary">
@@ -102,7 +102,7 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h3 id="背景："><a href="#背景：" class="headerlink" title="背景："></a>背景：</h3><p>Pika可以通过慢查询(Slowlog)来查询每个命令的执行时间，不过不能进行统计归类(例如多条set命令的执行情况会依次展示出来，没有统计功能)，并且Pika对各个命令的调用次数没有统计功能，只对总命令调用次数有统计功能。原因在于Pika没有实现Redis的info Commandstats命令，Redis的这个命令可以统计各个命令的耗时情况以及调用次数(以毫秒计)，Pika也需要支持这个命令</p>
+        <h3 id="背景："><a href="#背景：" class="headerlink" title="背景："></a>背景：</h3><p>Pika可以通过慢查询(Slowlog)来查询每个命令的执行时间<span id="more"></span>，不过不能进行统计归类(例如多条set命令的执行情况会依次展示出来，没有统计功能)，并且Pika对各个命令的调用次数没有统计功能，只对总命令调用次数有统计功能。原因在于Pika没有实现Redis的info Commandstats命令，Redis的这个命令可以统计各个命令的耗时情况以及调用次数(以毫秒计)，Pika也需要支持这个命令</p>
 <p>以下是Redis的Info Commandstats:</p>
 <p>其中cmdstat_set是命令名称，calls(命令调用次数)，usec(命令耗时)，usec_per_call(命令平均执行时间)</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0518.16.25_64a542ff15f8a.png" alt="截屏2023-07-05 18.16.25.png"></p>
@@ -121,7 +121,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/07/06/Pika%E5%91%BD%E4%BB%A4%E8%80%97%E6%97%B6%E7%BB%9F%E8%AE%A1%E5%8A%9F%E8%83%BD%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/" data-id="cljzq8buf0005serf604fdinf" data-title="Pika命令耗时统计功能技术文档" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/07/06/Pika%E5%91%BD%E4%BB%A4%E8%80%97%E6%97%B6%E7%BB%9F%E8%AE%A1%E5%8A%9F%E8%83%BD%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/" data-id="cljzqfxi100051frf6t7m2l8l" data-title="Pika命令耗时统计功能技术文档" class="article-share-link">Share</a>
       
       
       

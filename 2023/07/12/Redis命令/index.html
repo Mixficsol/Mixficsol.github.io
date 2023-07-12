@@ -6,15 +6,15 @@
   
   <title>Redis命令 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="STRING命令 APPEND 命令介绍：如果 key 已经存在，并且值为字符串，那么这个命令会把 value 追加到原来值（value）的结尾。 如果 key 不存在，那么它将首先创建一个空字符串的key，再执行追加操作，这种情况 APPEND 将类似于 SET 操作。 123456789redis&gt; EXISTS mykey(integer) 0redis&gt; APPEND myke">
+  <meta name="description" content="STRING命令 APPEND">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Redis命令">
 <meta property="og:url" content="http://example.com/2023/07/12/Redis%E5%91%BD%E4%BB%A4/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="STRING命令 APPEND 命令介绍：如果 key 已经存在，并且值为字符串，那么这个命令会把 value 追加到原来值（value）的结尾。 如果 key 不存在，那么它将首先创建一个空字符串的key，再执行追加操作，这种情况 APPEND 将类似于 SET 操作。 123456789redis&gt; EXISTS mykey(integer) 0redis&gt; APPEND myke">
+<meta property="og:description" content="STRING命令 APPEND">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2023-07-12T08:13:08.064Z">
-<meta property="article:modified_time" content="2023-07-12T12:39:28.027Z">
+<meta property="article:modified_time" content="2023-07-12T13:03:38.329Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Blog">
 <meta name="twitter:card" content="summary">
@@ -97,7 +97,7 @@
     <div class="e-content article-entry" itemprop="articleBody">
       
         <h2 id="STRING命令"><a href="#STRING命令" class="headerlink" title="STRING命令"></a>STRING命令</h2><ul>
-<li><p>APPEND</p>
+<li><p>APPEND<span id="more"></span></p>
 <p>命令介绍：如果 <code>key</code> 已经存在，并且值为字符串，那么这个命令会把 <code>value</code> 追加到原来值（value）的结尾。 如果 <code>key</code> 不存在，那么它将首先创建一个空字符串的<code>key</code>，再执行追加操作，这种情况 <a target="_blank" rel="noopener" href="http://redis.jianyue.wiki/ommands/append.html">APPEND</a> 将类似于 <a target="_blank" rel="noopener" href="http://redis.jianyue.wiki/ommands/set.html">SET</a> 操作。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; EXISTS mykey</span><br><span class="line">(<span class="built_in">integer</span>) 0</span><br><span class="line">redis&gt; APPEND mykey <span class="string">&quot;Hello&quot;</span></span><br><span class="line">(<span class="built_in">integer</span>) 5</span><br><span class="line">redis&gt; APPEND mykey <span class="string">&quot; World&quot;</span></span><br><span class="line">(<span class="built_in">integer</span>) 11</span><br><span class="line">redis&gt; GET mykey</span><br><span class="line"><span class="string">&quot;Hello World&quot;</span></span><br><span class="line">redis&gt;</span><br></pre></td></tr></table></figure>
 
@@ -1705,7 +1705,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/07/12/Redis%E5%91%BD%E4%BB%A4/" data-id="cljzq8buk000aserfbwjocjeo" data-title="Redis命令" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/07/12/Redis%E5%91%BD%E4%BB%A4/" data-id="cljzqfxi4000a1frf6z84hvb3" data-title="Redis命令" class="article-share-link">Share</a>
       
       
       

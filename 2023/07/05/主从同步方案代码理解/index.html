@@ -6,12 +6,12 @@
   
   <title>主从同步方案代码理解 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="命令：Bitop 命令介绍：对一个或多个保存二进制位的字符串 key 进行位元操作，并将结果保存到 destkey 上 123456789redis&gt; SET key1 &quot;foobar&quot;OKredis&gt; SET key2 &quot;abcdef&quot;OKredis&gt; BITOP AND dest key1 key2(integer) 6redis&amp;gt">
+  <meta name="description" content="命令：Bitop 命令介绍：对一个或多个保存二进制位的字符串 key 进行位元操作">
 <meta property="og:type" content="article">
 <meta property="og:title" content="主从同步方案代码理解">
 <meta property="og:url" content="http://example.com/2023/07/05/%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="命令：Bitop 命令介绍：对一个或多个保存二进制位的字符串 key 进行位元操作，并将结果保存到 destkey 上 123456789redis&gt; SET key1 &quot;foobar&quot;OKredis&gt; SET key2 &quot;abcdef&quot;OKredis&gt; BITOP AND dest key1 key2(integer) 6redis&amp;gt">
+<meta property="og:description" content="命令：Bitop 命令介绍：对一个或多个保存二进制位的字符串 key 进行位元操作">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0514.43.28_64a511149920e.png">
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0514.36.17_64a51124d552a.png">
@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0515.14.56_64a51876d4d44.png">
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0515.15.59_64a518b386a7a.png">
 <meta property="article:published_time" content="2023-07-05T04:46:20.000Z">
-<meta property="article:modified_time" content="2023-07-12T12:38:41.435Z">
+<meta property="article:modified_time" content="2023-07-12T13:02:42.629Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Blog">
 <meta name="twitter:card" content="summary">
@@ -108,7 +108,7 @@
     <div class="e-content article-entry" itemprop="articleBody">
       
         <p><strong>命令：Bitop</strong></p>
-<p>命令介绍：对一个或多个保存二进制位的字符串 key 进行位元操作，并将结果保存到 destkey 上</p>
+<p>命令介绍：对一个或多个保存二进制位的字符串 key 进行位元操作<span id="more"></span>，并将结果保存到 destkey 上</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; SET key1 &quot;foobar&quot;</span><br><span class="line">OK</span><br><span class="line">redis&gt; SET key2 &quot;abcdef&quot;</span><br><span class="line">OK</span><br><span class="line">redis&gt; BITOP AND dest key1 key2</span><br><span class="line">(integer) 6</span><br><span class="line">redis&gt; GET dest</span><br><span class="line">&quot;`bc`ab&quot;</span><br><span class="line">redis&gt;</span><br></pre></td></tr></table></figure>
 
 <p>背景：﻿从节点收到这样的命令之后，要再次读取后面的key对应的内容进行运算，但是没法保证从节点使用这两个key读取到的内容就和master读到的内容一样，会导致slave得到的运算结果和master不一致(结果存进dest_key,会导致主从的dest_key不一致)</p>
@@ -141,7 +141,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/07/05/%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/" data-id="cljzq8bum000fserf33hke97s" data-title="主从同步方案代码理解" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/07/05/%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/" data-id="cljzqfxi7000f1frfgbu37hh0" data-title="主从同步方案代码理解" class="article-share-link">Share</a>
       
       
       
