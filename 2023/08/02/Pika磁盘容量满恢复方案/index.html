@@ -13,6 +13,7 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="背景Pika 实例硬盘容量满，清理数据后，Pika 仍然保持错误的状态，需要重启才能恢复">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/eab3b443-a8e8-4530-a1a9-89c977651119">
 <meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/420fa305-533f-4d9a-af85-b28bcf34c4c8">
 <meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/0b00cc29-10db-4332-8f3c-c076e87e0059">
 <meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/2fc506e3-0717-48bd-8ee1-f081e18265e0">
@@ -22,11 +23,11 @@
 <meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/e11a2535-58b9-40f8-a045-0385f646647e">
 <meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/6d28dea8-8fff-4c50-b83a-4459fcd194ec">
 <meta property="article:published_time" content="2023-08-02T07:46:24.105Z">
-<meta property="article:modified_time" content="2023-08-07T02:48:18.551Z">
+<meta property="article:modified_time" content="2023-08-07T02:57:25.801Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Blog">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/420fa305-533f-4d9a-af85-b28bcf34c4c8">
+<meta name="twitter:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/eab3b443-a8e8-4530-a1a9-89c977651119">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -107,7 +108,8 @@
       
         <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>Pika 实例硬盘容量满，清理数据后，Pika 仍然保持错误的状态，需要重启才能恢复 <span id="more"></span></p>
 <h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>由于 RocksDB 在磁盘满了之后会进入写保护状态，此时不接受任何写请求，所以这种情况下如果 Pika 在清理掉磁盘空间进行接收写请求时，由于 RocksDB 还是处于写保护状态，这时候依然不能进行写响应，我们之前的一个方案是为 Pika 新增加一个线程，每过 5s 对磁盘进行检测，如果在预计容量内，则遍历整个 slot 对写请求状态进行恢复，但是由于这种操作每次需要遍历整个 DB 和 整个 slot，有上锁解锁操作，我们后面决定以一个命令的形式对这一情况进行解决，Diskcovery 命令，这个命令用于恢复对 RocksDB 的写保护状态，同时恢复 Pika 中写 binlog 错误的状态，在当前磁盘容量小于 write-buffer-size 的时候不进行恢复，只有在当前磁盘容量大于 write-buffer-size 的时候进行恢复，这里的 write-buffer-size 指 Memtable 的大小，设置为 256M. 以下是设计方案的代码：</p>
-<p>![截屏2023-08-07 10.43.25](&#x2F;var&#x2F;folders&#x2F;x_&#x2F;596n5q5x21d528hwy9trmctc0000gn&#x2F;T&#x2F;TemporaryItems&#x2F;NSIRD_screencaptureui_x5SuIE&#x2F;截屏2023-08-07 10.43.25.png)</p>
+<img width="785" alt="截屏2023-08-07 10 56 37" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/eab3b443-a8e8-4530-a1a9-89c977651119">
+
 <h2 id="复现方式"><a href="#复现方式" class="headerlink" title="复现方式"></a>复现方式</h2><ol>
 <li><p>我们首先创建一个 1GB 大小的虚拟磁盘 (Centos环境)，并查看是否成功</p>
 <p><code>dd if=/dev/zero of=my_virtual_disk.img bs=1G count=1</code></p>
@@ -163,7 +165,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/08/02/Pika%E7%A3%81%E7%9B%98%E5%AE%B9%E9%87%8F%E6%BB%A1%E6%81%A2%E5%A4%8D%E6%96%B9%E6%A1%88/" data-id="cll09xu3k0005aurfd92m1686" data-title="Pika磁盘容量满恢复方案" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/08/02/Pika%E7%A3%81%E7%9B%98%E5%AE%B9%E9%87%8F%E6%BB%A1%E6%81%A2%E5%A4%8D%E6%96%B9%E6%A1%88/" data-id="cll0a8hln000ao3rfgxhp91id" data-title="Pika磁盘容量满恢复方案" class="article-share-link">Share</a>
       
       
       

@@ -6,18 +6,26 @@
   
   <title>Pika的Zset范围删除性能优化方案 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="背景Pika 的 ZRemrangebyscore 命令的作用如下:">
+  <meta name="description" content="背景Pika 的 ZRemrangebyscore 命令的作用如下: 12345678910111213redis 127.0.0.1:6379&gt; ZRANGE salary 0 -1 WITHSCORES          # 显示有序集内所有成员及其 score 值1) &quot;tom&quot;2) &quot;2000&quot;3) &quot;peter&quot;4) &amp;q">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Pika的Zset范围删除性能优化方案">
 <meta property="og:url" content="http://example.com/2023/08/06/Pika%E7%9A%84Zset%E8%8C%83%E5%9B%B4%E5%88%A0%E9%99%A4%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%96%B9%E6%A1%88/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="背景Pika 的 ZRemrangebyscore 命令的作用如下:">
+<meta property="og:description" content="背景Pika 的 ZRemrangebyscore 命令的作用如下: 12345678910111213redis 127.0.0.1:6379&gt; ZRANGE salary 0 -1 WITHSCORES          # 显示有序集内所有成员及其 score 值1) &quot;tom&quot;2) &quot;2000&quot;3) &quot;peter&quot;4) &amp;q">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/d7d34ae7-6f61-4f58-9fd0-d8b72ad56155">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/2d910e4d-8e30-47f5-a5b4-2e0782911f0d">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/97b07fc1-3c65-4527-8e5f-098352cdc26e">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/aefa42f9-6af1-4522-b569-c3131efe539c">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/8100908c-556c-47b5-8483-7de6811544f5">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/d17e9a0d-98a0-47bc-8c18-f11102914946">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/a02a24c5-1d4d-40f0-a9c9-b2cdc87982ef">
 <meta property="article:published_time" content="2023-08-06T14:24:28.256Z">
-<meta property="article:modified_time" content="2023-08-07T02:48:37.545Z">
+<meta property="article:modified_time" content="2023-08-07T02:55:30.200Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Blog">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/d7d34ae7-6f61-4f58-9fd0-d8b72ad56155">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -96,30 +104,39 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>Pika 的 ZRemrangebyscore 命令的作用如下:<span id="more"></span></p>
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>Pika 的 ZRemrangebyscore 命令的作用如下:</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">redis 127.0.0.1:6379&gt; ZRANGE salary 0 -1 WITHSCORES          <span class="comment"># 显示有序集内所有成员及其 score 值</span></span><br><span class="line">1) <span class="string">&quot;tom&quot;</span></span><br><span class="line">2) <span class="string">&quot;2000&quot;</span></span><br><span class="line">3) <span class="string">&quot;peter&quot;</span></span><br><span class="line">4) <span class="string">&quot;3500&quot;</span></span><br><span class="line">5) <span class="string">&quot;jack&quot;</span></span><br><span class="line">6) <span class="string">&quot;5000&quot;</span></span><br><span class="line">redis 127.0.0.1:6379&gt; ZREMRANGEBYSCORE salary 1500 3500   <span class="comment"># 移除所有score在1500~3500内的key</span></span><br><span class="line">(<span class="built_in">integer</span>) 2</span><br><span class="line"></span><br><span class="line">redis&gt; ZRANGE salary 0 -1 WITHSCORES          <span class="comment"># 剩下的有序集成员</span></span><br><span class="line">1) <span class="string">&quot;jack&quot;</span></span><br><span class="line">2) <span class="string">&quot;5000&quot;</span></span><br></pre></td></tr></table></figure>
 
 <p>该命令用于删除 score 在指定范围下的 key，该命令在 Pika 中的实现是以迭代器的方式对范围内的 key 进行迭代删除，这样做的缺点在于每次都需要遍历删除一个 score key 和 member key 效率非常低，ZRemrangebyscore 目前的实现方法如下：</p>
-<p>![截屏2023-08-07 09.55.08](&#x2F;Users&#x2F;Mixficsol&#x2F;Desktop&#x2F;截屏2023-08-07 09.55.08.png)</p>
-<p>可以看到在一个 for 循环里面对每个 key 进行遍历，然后用 batch 进行删除。最后统计出删的个数在 Meta-value中做更新。</p>
-<p>![截屏2023-08-07 10.06.28](&#x2F;Users&#x2F;Mixficsol&#x2F;Desktop&#x2F;截屏2023-08-07 10.06.28.png)</p>
+<img width="1920" alt="截屏2023-08-07 09 55 00" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/d7d34ae7-6f61-4f58-9fd0-d8b72ad56155">
+
+
+<p>可以看到在一个 for 循环里面对每个 key 进行遍历，然后用 batch 进行删除。最后统计出删的个数在 Meta-value中做更新。<br><img width="1025" alt="截屏2023-08-07 09 55 08" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/2d910e4d-8e30-47f5-a5b4-2e0782911f0d"></p>
 <p>通过一个 python 脚本的压测，我们每次往一个 Zset 里面插入 50w 条数据，然后进行折半删除，并循环进行这样的操作，可以看到最终测出平均 25w 元素在 0.6s 左右删除，平均每秒删除 41w 左右个元素。</p>
-<p>![截屏2023-08-07 10.29.17](&#x2F;Users&#x2F;Mixficsol&#x2F;Desktop&#x2F;截屏2023-08-07 10.29.17.png)</p>
-<p>![截屏2023-08-07 10.29.58](&#x2F;var&#x2F;folders&#x2F;x_&#x2F;596n5q5x21d528hwy9trmctc0000gn&#x2F;T&#x2F;TemporaryItems&#x2F;NSIRD_screencaptureui_Wmc2yb&#x2F;截屏2023-08-07 10.29.58.png)</p>
+<img width="1409" alt="截屏2023-08-07 10 06 28" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/97b07fc1-3c65-4527-8e5f-098352cdc26e">
+
+
+<img width="823" alt="截屏2023-08-07 10 53 58" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/aefa42f9-6af1-4522-b569-c3131efe539c">
+
+
 <p>这是在循环压测时 Pika 的一些 CPU，内存的占比，CPU 使用率在 40% ~ 95% 之间.</p>
 <h3 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h3><p>在新的 ZRemrangebyscore 的实现方法中，我们采用 RocksDB 中的 DeleteRange 方法，这个函数可以根据给定的一个 min, max 的 key， 将范围内的 key 全部删除，不再进行迭代删除，具体实现方法如下：</p>
-<p>![截屏2023-08-07 10.17.59](&#x2F;Users&#x2F;Mixficsol&#x2F;Desktop&#x2F;截屏2023-08-07 10.17.59.png)</p>
+<img width="1495" alt="截屏2023-08-07 10 17 59" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/8100908c-556c-47b5-8483-7de6811544f5">
+
+
 <p>可以看到，我们依然还是用 for 循环去遍历，这是因为 ZRemrangebyscore 是根据 score 的大小去删除 key， 而在 Zset 中每次 Zadd 插入元素时，我们都会存两份数据，一个是根据 score 大小排名的 key，还有一部分是根据member 大小(字典序)排名的 key，所以我们在进行删除时，根据 member 大小排名的 key 我们还是得进行遍历删除，而根据 score 大小排名的 key，我们可以直接调用  DeleteRange 函数进行删除，所以这种优化方案大概优化 50%。以下是新方法实现  ZRemrangebyscore 的压测数据：</p>
-<p>![截屏2023-08-07 10.23.52](&#x2F;Users&#x2F;Mixficsol&#x2F;Desktop&#x2F;截屏2023-08-07 10.23.52.png)</p>
+<img width="1378" alt="截屏2023-08-07 10 23 52" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/d17e9a0d-98a0-47bc-8c18-f11102914946">
+
 <p>可以看到同样是每次往一个 Zset 里面插入 50w 条数据，然后进行折半删除，并循环进行这样的操作，可以看到最终测出平均 25w 元素在 0.34s 左右删除，平均每秒删除 72w 左右个元素，比之前提升了差不多 50% 的性能</p>
-<p>![截屏2023-08-07 10.25.59](&#x2F;var&#x2F;folders&#x2F;x_&#x2F;596n5q5x21d528hwy9trmctc0000gn&#x2F;T&#x2F;TemporaryItems&#x2F;NSIRD_screencaptureui_FEhhik&#x2F;截屏2023-08-07 10.26.22.png)</p>
-<p>![截屏2023-08-07 10.26.50](&#x2F;var&#x2F;folders&#x2F;x_&#x2F;596n5q5x21d528hwy9trmctc0000gn&#x2F;T&#x2F;TemporaryItems&#x2F;NSIRD_screencaptureui_if3xH8&#x2F;截屏2023-08-07 10.26.50.png)</p>
+<img width="817" alt="截屏2023-08-07 10 54 37" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/a02a24c5-1d4d-40f0-a9c9-b2cdc87982ef">
+
+
 <p>对比之前没改之前的 CPU 占比，我们发现在新方法实现下 CPU 的占比会比之前高，稳定在 90% ~ 130% 之间.</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/08/06/Pika%E7%9A%84Zset%E8%8C%83%E5%9B%B4%E5%88%A0%E9%99%A4%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%96%B9%E6%A1%88/" data-id="cll09xu3m0008aurf4yb4hohi" data-title="Pika的Zset范围删除性能优化方案" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/08/06/Pika%E7%9A%84Zset%E8%8C%83%E5%9B%B4%E5%88%A0%E9%99%A4%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%96%B9%E6%A1%88/" data-id="cll0a8hll0005o3rf3jnnf78p" data-title="Pika的Zset范围删除性能优化方案" class="article-share-link">Share</a>
       
       
       
