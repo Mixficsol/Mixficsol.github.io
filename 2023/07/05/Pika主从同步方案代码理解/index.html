@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0515.14.56_64a51876d4d44.png">
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0515.15.59_64a518b386a7a.png">
 <meta property="article:published_time" content="2023-07-05T04:46:20.000Z">
-<meta property="article:modified_time" content="2023-08-08T08:05:05.167Z">
+<meta property="article:modified_time" content="2023-08-08T08:45:41.998Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Blog">
 <meta name="twitter:card" content="summary">
@@ -107,24 +107,24 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>﻿从节点收到 Bitop 这样的命令之后，要再次读取后面的 key 对应的内容进行运算<span id="more"></span>，但是没法保证从节点使用这两个key读取到的内容就和master读到的内容一样，会导致slave得到的运算结果和master不一致(结果存进dest_key,会导致主从的dest_key不一致)</p>
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>﻿从节点收到 Bitop 这样的命令之后，要再次读取后面的 key 对应的内容进行运算<span id="more"></span>，但是没法保证从节点使用这两个 key 读取到的内容就和 master 读到的内容一样，会导致 slave 得到的运算结果和 master 不一致(结果存进 dest_key,会导致主从的dest_key不一致)</p>
 <p><strong>命令：Bitop</strong></p>
 <p>命令介绍：对一个或多个保存二进制位的字符串 key 进行位元操作，并将结果保存到 destkey 上</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; SET key1 &quot;foobar&quot;</span><br><span class="line">OK</span><br><span class="line">redis&gt; SET key2 &quot;abcdef&quot;</span><br><span class="line">OK</span><br><span class="line">redis&gt; BITOP AND dest key1 key2</span><br><span class="line">(integer) 6</span><br><span class="line">redis&gt; GET dest</span><br><span class="line">&quot;`bc`ab&quot;</span><br><span class="line">redis&gt;</span><br></pre></td></tr></table></figure>
 
 
 
-<h2 id="修改方案"><a href="#修改方案" class="headerlink" title="修改方案"></a>修改方案</h2><p>binlog改成了一条set的binlog，写成了: set key result_to_dest （注: result_to_dest就是后面使用后面的key得到的运算结果，也就是存到了第一个key中的内容)</p>
+<h2 id="修改方案"><a href="#修改方案" class="headerlink" title="修改方案"></a>修改方案</h2><p>binlog 改成了一条 set 的 binlog，写成了: set key result_to_dest （注: result_to_dest就是后面使用后面的key得到的运算结果，也就是存到了第一个 key 中的内容)</p>
 <h2 id="修改代码前后对比"><a href="#修改代码前后对比" class="headerlink" title="修改代码前后对比"></a>修改代码前后对比</h2><h5 id="include-x2F-pika-bit-h-126"><a href="#include-x2F-pika-bit-h-126" class="headerlink" title="include&#x2F;pika_bit.h +126"></a>include&#x2F;pika_bit.h +126</h5><p>修改前：</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0514.43.28_64a511149920e.png" alt="截屏2023-07-05 14.43.28.png"></p>
 <p>修改后：</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0514.36.17_64a51124d552a.png" alt="截屏2023-07-05 14.36.17.png"></p>
-<p>这里新增了Bitop拷贝构造函数和DoBinlog函数,以及需要新加的value_to_dest这个最终要写到binlog里面的参数，这里写了拷贝构造函数是因为使用默认的拷贝构造会导致多个bitop命令并发的时候，他们都用了同一个set命令的实例，会有线程安全问题。DoBinlog函数就是让程序执行DoBinlog的时候不使用基类Cmd的DoBinlog而是使用子类覆写的Binlog，current_key()这个函数把需要锁的key传过来。</p>
+<p>这里新增了 Bitop 拷贝构造函数和 DoBinlog 函数,以及需要新加的 value_to_dest 这个最终要写到 binlog 里面的参数，这里写了拷贝构造函数是因为使用默认的拷贝构造会导致多个 bitop 命令并发的时候，他们都用了同一个set 命令的实例，会有线程安全问题。DoBinlog 函数就是让程序执行 DoBinlog 的时候不使用基类 Cmd 的DoBinlog 而是使用子类覆写的 Binlog，current_key() 这个函数把需要锁的 key 传过来。</p>
 <h4 id="src-x2F-pika-bit-cc-211"><a href="#src-x2F-pika-bit-cc-211" class="headerlink" title="src&#x2F;pika_bit.cc +211"></a>src&#x2F;pika_bit.cc +211</h4><p>修改前：</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0514.47.18_64a511fb2426a.png" alt="截屏2023-07-05 14.47.18.png"></p>
 <p>修改后：</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0514.48.11_64a5126a7a469.png" alt="截屏2023-07-05 14.48.11.png"></p>
-<p>这里在Bitop方法里面新增了value_to_dest_这个参数，并且实现了DoBinlog这个函数，这里PikaCmdArgsType的这个参数set_args本质是一个<code>std::vector&lt;std::string&gt;</code>，这里我们把命令”set”,存储目标”dest_key_”，运算结果”value_to_dest”放到这个vector里面,这里相当于bitop计算出来后的值当做set命令的value,set_cmd_这个是一个指向SetCmd类的一个智能指针,然后进行初始化流程，最后调用基类Cmd的DoBinlog完成流程</p>
+<p>这里在 Bitop 方法里面新增了 value_to_dest 这个参数，并且实现了 DoBinlog 这个函数，这里PikaCmdArgsType 的这个参数 set_args 本质是一个 <code>std::vector&lt;std::string&gt;</code>，这里我们把命令” set “,存储目标 “ dest_key “，运算结果” value_to_dest “放到这个 vector 里面,这里相当于 bitop 计算出来后的值当做 set 命令的 value, set_cmd_ 这个是一个指向 SetCmd 类的一个智能指针,然后进行初始化流程，最后调用基类 Cmd 的DoBinlog 完成流程</p>
 <h4 id="src-x2F-storage-x2F-include-x2F-storage-x2F-storage-h-223"><a href="#src-x2F-storage-x2F-include-x2F-storage-x2F-storage-h-223" class="headerlink" title="src&#x2F;storage&#x2F;include&#x2F;storage&#x2F;storage.h +223"></a>src&#x2F;storage&#x2F;include&#x2F;storage&#x2F;storage.h +223</h4><p>修改前：</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0515.07.57_64a516d30cc95.png" alt="截屏2023-07-05 15.07.57.png"></p>
 <p>修改后：</p>
@@ -133,7 +133,7 @@
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0515.11.22_64a517a159606.png" alt="截屏2023-07-05 15.11.22.png"></p>
 <p>修改后：</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0515.12.47_64a5182ed6c2b.png" alt="截屏2023-07-05 15.12.47.png"></p>
-<p>这里多个value_to_dest参数，把BitOpOperate计算出来的值传给value_to_dest</p>
+<p>这里多个 value_to_dest 参数，把 BitOpOperate 计算出来的值传给 value_to_dest</p>
 <h4 id="src-x2F-storage-x2F-src-x2F-redis-strings-h-35"><a href="#src-x2F-storage-x2F-src-x2F-redis-strings-h-35" class="headerlink" title="src&#x2F;storage&#x2F;src&#x2F;redis_strings.h +35"></a>src&#x2F;storage&#x2F;src&#x2F;redis_strings.h +35</h4><p>修改前：</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0515.14.56_64a51876d4d44.png" alt="截屏2023-07-05 15.14.56.png"></p>
 <p>修改后：</p>
@@ -144,7 +144,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/07/05/Pika%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/" data-id="cll20nzu200011prf60bqgu76" data-title="Pika主从同步方案代码理解" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/07/05/Pika%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/" data-id="cll22ab0j0004cqrfgkot142e" data-title="Pika主从同步方案代码理解" class="article-share-link">Share</a>
       
       
       
@@ -232,11 +232,11 @@
           </li>
         
           <li>
-            <a href="/2023/07/12/Redis%E5%91%BD%E4%BB%A4/">Redis命令</a>
+            <a href="/2023/07/12/pika_exporter%E6%9C%AC%E5%9C%B0%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%96%87%E6%A1%A3/">Pika_exporter本地启动文档</a>
           </li>
         
           <li>
-            <a href="/2023/07/12/pika_exporter%E6%9C%AC%E5%9C%B0%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%96%87%E6%A1%A3/">Pika_exporter本地启动文档</a>
+            <a href="/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/">Blackwidow代码解析</a>
           </li>
         
       </ul>

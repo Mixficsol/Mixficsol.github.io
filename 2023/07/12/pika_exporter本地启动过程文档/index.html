@@ -33,7 +33,7 @@
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-2114.33.10_64ba26a946377.png">
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-2114.33.59_64ba26dc24ae8.png">
 <meta property="article:published_time" content="2023-07-12T04:41:08.000Z">
-<meta property="article:modified_time" content="2023-08-08T07:55:09.703Z">
+<meta property="article:modified_time" content="2023-08-08T08:37:49.157Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Blog">
 <meta name="twitter:card" content="summary">
@@ -122,10 +122,10 @@
 <p>2.查看安装位置：</p>
 <p>which prometheus</p>
 <p>3.我的安装到了这个位置：</p>
-<p>&#x2F;usr&#x2F;local&#x2F;bin&#x2F;prometheus  （还有一种是&#x2F;opt&#x2F;homebrew&#x2F;bin&#x2F;prometheus)</p>
+<p>&#x2F;usr&#x2F;local&#x2F;bin&#x2F;prometheus  （还有一种是 &#x2F;opt&#x2F;homebrew&#x2F;bin&#x2F;prometheus)</p>
 <p>4.找到默认配置的位置，我的是放在这里：</p>
 <p>&#x2F;usr&#x2F;local&#x2F;etc&#x2F;prometheus.yml</p>
-<p>5.进入安装prometheus路径</p>
+<p>5.进入安装 prometheus 路径</p>
 <p>cd &#x2F;usr&#x2F;local&#x2F;bin&#x2F;   （如果你的路径是上面第二种执行 cd &#x2F;opt&#x2F;homebrew&#x2F;bin ）</p>
 <p>输入：.&#x2F;prometheus –config.file&#x3D;&#x2F;usr&#x2F;local&#x2F;etc&#x2F;prometheus.yml  (如果是第二种路径执行:.&#x2F;prometheus –config.file&#x3D;&#x2F;opt&#x2F;homebrew&#x2F;etc&#x2F;prometheus.yml)</p>
 <p>6.启动后浏览器输入： <a target="_blank" rel="noopener" href="http://localhost:9090/">http://localhost:9090</a></p>
@@ -136,16 +136,16 @@
 <p>2.查看安装位置：</p>
 <p>which grafana</p>
 <p>我的安装在了这个位置：&#x2F;usr&#x2F;local&#x2F;bin&#x2F;grafana  (有人可能会是： &#x2F;opt&#x2F;homebrew&#x2F;bin&#x2F;grafana这个路径)</p>
-<p>3.输入命令（对应生成文件的位置）<strong>启动grafana</strong></p>
+<p>3.输入命令（对应生成文件的位置）<strong>启动 grafana</strong></p>
 <p>grafana-server –config&#x3D;&#x2F;usr&#x2F;local&#x2F;etc&#x2F;grafana&#x2F;grafana.ini –homepath &#x2F;usr&#x2F;local&#x2F;share&#x2F;grafana –packaging&#x3D;brew cfg:default.paths.logs&#x3D;&#x2F;usr&#x2F;local&#x2F;var&#x2F;log&#x2F;grafana cfg:default.paths.data&#x3D;&#x2F;usr&#x2F;local&#x2F;var&#x2F;lib&#x2F;grafana cfg:default.paths.plugins&#x3D;&#x2F;usr&#x2F;local&#x2F;var&#x2F;lib&#x2F;grafana&#x2F;plugins</p>
-<p><strong>如果是安装到&#x2F;opt&#x2F;homebrew下的话执行下面这条命令：</strong></p>
+<p><strong>如果是安装到 &#x2F;opt&#x2F;homebrew 下的话执行下面这条命令：</strong></p>
 <p>grafana-server –config&#x3D;&#x2F;opt&#x2F;homebrew&#x2F;etc&#x2F;grafana&#x2F;grafana.ini –homepath &#x2F;opt&#x2F;homebrew&#x2F;share&#x2F;grafana –packaging&#x3D;brew cfg:default.paths.logs&#x3D;&#x2F;opt&#x2F;homebrew&#x2F;var&#x2F;log&#x2F;grafana cfg:default.paths.data&#x3D;&#x2F;opt&#x2F;homebrew&#x2F;var&#x2F;lib&#x2F;grafana cfg:default.paths.plugins&#x3D;&#x2F;opt&#x2F;homebrew&#x2F;var&#x2F;lib&#x2F;grafana&#x2F;plugins</p>
 <p>4.输入地址：<a target="_blank" rel="noopener" href="http://localhost:3000/">http://localhost:3000/</a></p>
 <p>可以看到这个画面：</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0715.00.43_64a7b82195268.png" alt="截屏2023-07-07 15.00.43.png"></p>
-<p>这里的账号密码初始都是admin，填入后点击Log in,修改自己的密码，然后登录后是这个画面：</p>
+<p>这里的账号密码初始都是 admin，填入后点击 Log in,修改自己的密码，然后登录后是这个画面：</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0715.01.51_64a7b864e7867.png" alt="截屏2023-07-07 15.01.51.png"></p>
-<h3 id="启动Pika"><a href="#启动Pika" class="headerlink" title="启动Pika"></a>启动Pika</h3><p><strong>1.启动pika</strong></p>
+<h3 id="启动Pika"><a href="#启动Pika" class="headerlink" title="启动Pika"></a>启动Pika</h3><p><strong>1.启动 pika</strong></p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./output/pika -c ./conf/pika.conf </span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1014.07.16_64aba02cb4d61.png" alt="截屏2023-07-10 14.07.16.png"></p>
@@ -156,16 +156,16 @@
 
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1015.53.55_64abb9308abff.png" alt="截屏2023-07-10 15.53.55.png"></p>
 <p><strong>3.启动pika_exporter</strong></p>
-<p>这里根据自己的pika_exporter可执行文件路径进行启动(如果有端口冲突的话杀掉端口重新执行就行) <strong>注：需要先cd到pika_exporter目录下,如果第一次用的话先make</strong></p>
+<p>这里根据自己的 pika_exporter 可执行文件路径进行启动(如果有端口冲突的话杀掉端口重新执行就行) <strong>注：需要先 cd 到 pika_exporter 目录下,如果第一次用的话先 make</strong></p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./bin/pika_exporter -pika.addr 127.0.0.1:9221 &amp;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1014.08.57_64aba07e4edb6.png" alt="截屏2023-07-10 14.08.57.png"></p>
 <p><strong>4.启动prometheus</strong></p>
-<p>这里根据自己的prometheus.yml路径进行启动(如果有端口冲突的话杀掉端口重新执行就行)</p>
+<p>这里根据自己的 prometheus.yml 路径进行启动(如果有端口冲突的话杀掉端口重新执行就行)</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">prometheus --config.file=./grafana/prometheus.yml</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1014.17.51_64aba291f16fa.png" alt="截屏2023-07-10 14.17.51.png"></p>
-<h3 id="导入pika-exporter"><a href="#导入pika-exporter" class="headerlink" title="导入pika_exporter"></a>导入pika_exporter</h3><p><strong>1.需要添加数据源prometheus: 这里我们点击Data sources</strong></p>
+<h3 id="导入pika-exporter"><a href="#导入pika-exporter" class="headerlink" title="导入pika_exporter"></a>导入pika_exporter</h3><p><strong>1.需要添加数据源 prometheus: 这里我们点击 Data sources</strong></p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1014.00.02_64ab9e911dcee.png" alt="截屏2023-07-10 14.00.02.png"></p>
 <p><strong>点击Add data source</strong></p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1014.01.28_64ab9ebdc1305.png" alt="截屏2023-07-10 14.01.28.png"></p>
@@ -175,16 +175,16 @@
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1014.03.26_64ab9f419fe19.png" alt="截屏2023-07-10 14.03.26.png"></p>
 <p><strong>点击Save &amp;test</strong></p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1014.04.33_64ab9f86e676c.png" alt="截屏2023-07-10 14.04.33.png"></p>
-<h3 id="导入模版："><a href="#导入模版：" class="headerlink" title="导入模版："></a>导入模版：</h3><p><strong>这里我们将pika目录下的pika&#x2F;tools&#x2F;pika_exporter&#x2F;grafana&#x2F;grafana_prometheus_pika_dashboard.json文件导入</strong></p>
+<h3 id="导入模版："><a href="#导入模版：" class="headerlink" title="导入模版："></a>导入模版：</h3><p><strong>这里我们将 Pika 目录下的pika&#x2F;tools&#x2F;pika_exporter&#x2F;grafana&#x2F;grafana_prometheus_pika_dashboard.json 文件导入</strong></p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0715.12.23_64a7badbc231f.png" alt="截屏2023-07-07 15.12.23.png"></p>
-<p><strong>导入json和选择我们刚刚设置的数据源后就可以点击import</strong></p>
+<p><strong>导入 json 和选择我们刚刚设置的数据源后就可以点击 import</strong></p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1014.11.02_64aba1129f73f.png" alt="截屏2023-07-10 14.11.02.png"></p>
 <h3 id="查看监控结果"><a href="#查看监控结果" class="headerlink" title="查看监控结果"></a>查看监控结果</h3><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1014.16.29_64aba2440f46d.png" alt="截屏2023-07-10 14.16.29.png"></p>
-<h3 id="查看Metrics抓取数据"><a href="#查看Metrics抓取数据" class="headerlink" title="查看Metrics抓取数据"></a>查看Metrics抓取数据</h3><p>1.进入127.0.0.1:9090网页</p>
+<h3 id="查看Metrics抓取数据"><a href="#查看Metrics抓取数据" class="headerlink" title="查看Metrics抓取数据"></a>查看Metrics抓取数据</h3><p>1.进入 127.0.0.1:9090 网页</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-2114.31.47_64ba2657c8506.png" alt="截屏2023-07-21 14.31.47.png"></p>
-<p>2.选择Targets</p>
+<p>2.选择 Targets</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-2114.32.10_64ba26886ab75.png" alt="截屏2023-07-21 14.32.10.png"></p>
-<p>3.进入Endpoint的网址</p>
+<p>3.进入 Endpoint 的网址</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-2114.33.10_64ba26a946377.png" alt="截屏2023-07-21 14.33.10.png"></p>
 <p>可以查询到目前抓取了哪些指标</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-2114.33.59_64ba26dc24ae8.png" alt="截屏2023-07-21 14.33.59.png"></p>
@@ -192,7 +192,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/07/12/pika_exporter%E6%9C%AC%E5%9C%B0%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%96%87%E6%A1%A3/" data-id="cll20nzud000f1prfehppef7h" data-title="Pika_exporter本地启动文档" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/07/12/pika_exporter%E6%9C%AC%E5%9C%B0%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%96%87%E6%A1%A3/" data-id="cll22ab0p000hcqrfgmsi9hyi" data-title="Pika_exporter本地启动文档" class="article-share-link">Share</a>
       
       
       
@@ -204,11 +204,11 @@
     
 <nav id="article-nav">
   
-    <a href="/2023/07/12/Redis%E5%91%BD%E4%BB%A4/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2023/08/02/Pika%E7%A3%81%E7%9B%98%E5%AE%B9%E9%87%8F%E6%BB%A1%E6%81%A2%E5%A4%8D%E6%96%B9%E6%A1%88/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
-          Redis命令
+          Pika磁盘容量满恢复方案
         
       </div>
     </a>
@@ -280,11 +280,11 @@
           </li>
         
           <li>
-            <a href="/2023/07/12/Redis%E5%91%BD%E4%BB%A4/">Redis命令</a>
+            <a href="/2023/07/12/pika_exporter%E6%9C%AC%E5%9C%B0%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%96%87%E6%A1%A3/">Pika_exporter本地启动文档</a>
           </li>
         
           <li>
-            <a href="/2023/07/12/pika_exporter%E6%9C%AC%E5%9C%B0%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%96%87%E6%A1%A3/">Pika_exporter本地启动文档</a>
+            <a href="/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/">Blackwidow代码解析</a>
           </li>
         
       </ul>

@@ -54,7 +54,7 @@
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1103.37.35_64ac5e11cfe70.png">
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1103.38.41_64ac5e453b1b2.png">
 <meta property="article:published_time" content="2023-07-10T23:32:18.000Z">
-<meta property="article:modified_time" content="2023-08-08T08:04:31.723Z">
+<meta property="article:modified_time" content="2023-08-08T08:36:13.237Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Blog">
 <meta name="twitter:card" content="summary">
@@ -139,84 +139,84 @@
       
         <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>我们希望通过阅读 Blackwidow 源码来学习这个存储引擎存储数据的方式<span id="more"></span></p>
 <h3 id="1-String结构的存储"><a href="#1-String结构的存储" class="headerlink" title="1. String结构的存储"></a>1. String结构的存储</h3><h5 id="pika-x2F-src-x2F-storage-x2F-src-x2F-redis-strings-cc"><a href="#pika-x2F-src-x2F-storage-x2F-src-x2F-redis-strings-cc" class="headerlink" title="pika&#x2F;src&#x2F;storage&#x2F;src&#x2F;redis_strings.cc"></a>pika&#x2F;src&#x2F;storage&#x2F;src&#x2F;redis_strings.cc</h5><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1109.58.58_64acb779b287d.png" alt="截屏2023-07-11 09.58.58.png"></p>
-<p>String本质上就是Key, Value, 我们知道Rocksdb本身就是支持kv存储的， 我们为了实现Redis中的ttl功能，所以在value后面添加了4 Bytes用于存储timestamp, 作为最后Rocksdb落盘的kv格式，我们以一个Setex命令为例来看kv在Blackwidow下这个命令时怎么执行的，这里ScopeRecordLock给key上锁，防止多线程并发操作key，db_-&gt;Put操作的时候对value做了Encode操作(本篇中所有出现Encode的函数都代表对数据进行组装)，我们先看下SetRelativeTimestamp这个函数.</p>
+<p>String 本质上就是 Key, Value, 我们知道 RocksDB 本身就是支持 KV 存储的， 我们为了实现 Redis 中的 ttl 功能，所以在 value 后面添加了4 Bytes 用于存储 timestamp, 作为最后 RocksDB 落盘的 KV 格式，我们以一个 Setex 命令为例来看 KV 在 Blackwidow 下这个命令时怎么执行的，这里 ScopeRecordLock 给 key 上锁，防止多线程并发操作 key，db_-&gt;Put 操作的时候对 value 做了 Encode 操作(本篇中所有出现 Encode 的函数都代表对数据进行组装)，我们先看下 SetRelativeTimestamp 这个函数.</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1110.01.29_64acb82a1124e.png" alt="截屏2023-07-11 10.01.29.png"></p>
-<p>我们可以看到timestamp_由unix_time和ttl相加，unix_time转换为32位，ttl也是32位，timestamp_同样也是32位.可以看到这个是对ttl进行设置的，以4个字节存ttl的值，接着我们继续看Encode这个函数</p>
+<p>我们可以看到 timestamp 由 unix_time 和 ttl 相加，unix_time 转换为 32 位，ttl 也是 32 位，timestamp_ 同样也是 32 位.可以看到这个是对 ttl 进行设置的，以 4 个字节存ttl的值，接着我们继续看 Encode 这个函数</p>
 <h6 id="src-x2F-storage-x2F-src-x2F-base-value-format-h"><a href="#src-x2F-storage-x2F-src-x2F-base-value-format-h" class="headerlink" title="src&#x2F;storage&#x2F;src&#x2F;base_value_format.h"></a>src&#x2F;storage&#x2F;src&#x2F;base_value_format.h</h6><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0522.51.25_64a583703b71a.png" alt="截屏2023-07-05 22.51.25.png"></p>
-<p>我们可以看到这里start_是一个char*指针指向dst,再来看下AppendTimestampAndVersion()这个函数，由于这个函数在基类(InternalValue）是一个虚函数里面没有写实现方法，所以我们调用的是派生类(StringsValue)覆写的这个方法.</p>
+<p>我们可以看到这里 start_ 是一个 char* 指针指向 dst ,再来看下 AppendTimestampAndVersion() 这个函数，由于这个函数在基类 (InternalValue）是一个虚函数里面没有写实现方法，所以我们调用的是派生类 (StringsValue) 覆写的这个方法.</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0523.01.37_64a585d58508b.png" alt="截屏2023-07-05 23.01.37.png"></p>
-<p>这里调用memcpy函数把user_value_的数据写进指针dst里面，然后指针后移usize大小,然后调用EncodeFixed32,这里由于我们是setex命令，所以这里的timestamp是之前调用SetRelativeTimestamp()函数存进的ttl值.(这边kLittlwEndian涉及到大小端法)</p>
+<p>这里调用 memcpy 函数把 user_value_ 的数据写进指针 dst 里面，然后指针后移 usize 大小,然后调用EncodeFixed32,这里由于我们是 setex 命令，所以这里的 timestamp 是之前调用 SetRelativeTimestamp() 函数存进的 ttl 值.(这边 kLittlwEndian 涉及到大小端法)</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0523.11.19_64a5881a2095a.png" alt="截屏2023-07-05 23.11.19.png"></p>
-<p>这里可以看出EncodeFixed32就是把ttl也写到dst里面，所以函数最终的返回就是value的大小外加一个4字节的ttl.<strong>（value组装完成)</strong> 如果我们没有对该String对象设置超时时间，则timestamp存储的值就是默认值0， 否则就是该对象过期时间的时间戳， 每次我们获取一个String对象的时候， 首先会解析Value部分的后四字节， 获取到timestamp做出判断之后再返回结果。</p>
-<p>所以String类型下的key&#x2F;value就是以下构图：</p>
+<p>这里可以看出 EncodeFixed32 就是把 ttl 也写到 dst 里面，所以函数最终的返回就是 value 的大小外加一个 4 字节的 ttl.<strong>（value 组装完成)</strong> 如果我们没有对该 String 对象设置超时时间，则 timestamp 存储的值就是默认值 0， 否则就是该对象过期时间的时间戳， 每次我们获取一个 String 对象的时候， 首先会解析 Value 部分的后四字节， 获取到 timestamp 做出判断之后再返回结果。</p>
+<p>所以 String 类型下的 key&#x2F;value 就是以下构图：</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0523.23.09_64a58ae103c79.png" alt="截屏2023-07-05 23.23.09.png"></p>
 <h2 id="2-Hash结构的存储"><a href="#2-Hash结构的存储" class="headerlink" title="2. Hash结构的存储"></a>2. Hash结构的存储</h2><h5 id="pika-x2F-src-x2F-storage-x2F-src-x2F-redis-hashes-cc"><a href="#pika-x2F-src-x2F-storage-x2F-src-x2F-redis-hashes-cc" class="headerlink" title="pika&#x2F;src&#x2F;storage&#x2F;src&#x2F;redis_hashes.cc"></a>pika&#x2F;src&#x2F;storage&#x2F;src&#x2F;redis_hashes.cc</h5><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1100.48.53_64ac368b827a8.png" alt="截屏2023-07-11 00.48.53.png"></p>
-<p>blackwidow中的hash表由两部分构成，元数据(meta_key, meta_value), 和普通数据(data_key, data_value), 元数据中存储的主要是hash表的一些信息， 比如说当前hash表的域的数量以及当前hash表的版本号和过期时间(用做秒删功能), 而普通数据主要就是指的同一个hash表中一一对应的field和value，作为具体最后Rocksdb落盘的kv格式，我们以一个Hset命令看下在blackwidow怎么实现的Hash结构，这里我们以第一次使用为例，我们会先Get在DB中是否有存在的key.</p>
+<p>blackwidow 中的 hash 表由两部分构成，元数据(meta_key, meta_value), 和普通数据(data_key, data_value), 元数据中存储的主要是 hash 表的一些信息， 比如说当前 hash 表的域的数量以及当前 hash 表的版本号和过期时间(用做秒删功能), 而普通数据主要就是指的同一个 hash 表中一一对应的 field 和 value，作为具体最后 RocksDB 落盘的 KV 格式，我们以一个 Hset 命令看下在 blackwidow 怎么实现的 Hash 结构，这里我们以第一次使用为例，我们会先 Get 在 DB 中是否有存在的 key.</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1101.04.23_64ac3a701cf1c.png" alt="截屏2023-07-11 01.04.23.png"></p>
-<p>可以看到我们会走到s.IsNotFound这层逻辑(因为第一次使用hset肯定key是肯定不在db中的),然后我们看下EncodeFixed32这个函数传入一个str和1，这里的1代表当前hash-size的大小，因为一次hset只能set一个field和对应的value,所以第一次执行时size肯定是1，而EncodeFixed32就是把整形的数字1以字符串的形式加到str中。</p>
+<p>可以看到我们会走到 s.IsNotFound 这层逻辑(因为第一次使用 hset 肯定 key 是肯定不在 db 中的),然后我们看下EncodeFixed32 这个函数传入一个 str 和 1，这里的 1 代表当前 hash-size 的大小，因为一次 hset 只能 set 一个field 和对应的 value,所以第一次执行时 size 肯定是 1，而 EncodeFixed32 就是把整形的数字 1 以字符串的形式加到 str 中。</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1100.54.59_64ac37e90e759.png" alt="截屏2023-07-11 00.54.59.png"></p>
-<p>这里我们看到memcpy就是把整形数以字符串形式放到buf中.</p>
+<p>这里我们看到 memcpy 就是把整形数以字符串形式放到 buf 中.</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1100.59.46_64ac3907c131f.png" alt="截屏2023-07-11 00.59.46.png"></p>
-<p>处理完hash-size的构成，接下来是Version的部分，这里的UpdataVersion是派生类覆写的函数，可以看到这里的version依然是由4个字节组成，利用static_cast将int64_t转换为32位.</p>
+<p>处理完 hash-size 的构成，接下来是 Version 的部分，这里的 UpdataVersion 是派生类覆写的函数，可以看到这里的 version 依然是由 4 个字节组成，利用 static_cast 将 int64_t 转换为 32 位.</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1101.06.54_64ac3ab2676d3.png" alt="截屏2023-07-11 01.06.54.png"></p>
-<p>这个Encode完成对meta-value的组装，这里的部分和kv差不多，然后AppendTimestampAndVersion函数是调用派生类覆写的函数.这里我们看 AppendTimestampAndVersion这个函数。</p>
+<p>这个 Encode 完成对 meta-value 的组装，这里的部分和 KV 差不多，然后 AppendTimestampAndVersion 函数是调用派生类覆写的函数.这里我们看 AppendTimestampAndVersion 这个函数。</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1101.30.42_64ac404919fb5.png" alt="截屏2023-07-11 01.30.42.png"></p>
-<p>可以看到这里函数里面一次性完成了对meta-value的组装，第一个memcpy组装了hash的size，后面两个EncodeFixed32完成对version和ttl的组装，**(mate-value组装完成)**</p>
+<p>可以看到这里函数里面一次性完成了对 meta-value 的组装，第一个 memcpy 组装了 hash 的 size，后面两个EncodeFixed32 完成对 version 和 ttl 的组装，**(mate-value 组装完成)**</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1101.38.04_64ac4218b6006.png" alt="截屏2023-07-11 01.38.04.png"></p>
-<p>完成了对meta-value的组装，我们继续看下对data-key的组装，这里依旧是调用Encode函数</p>
+<p>完成了对 meta-value 的组装，我们继续看下对 data-key 的组装，这里依旧是调用 Encode 函数</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1101.39.34_64ac425a29dd2.png" alt="截屏2023-07-11 01.39.34.png"></p>
-<p>可以看到这里第一个EncodeFixed32装载key的size，第二个memepy装载key的data，第三个EncodeFixed32装载version,第四个memcpy装载field的data. <strong>(data-key组装完成)</strong></p>
-<p>如果我们需要查找一个hash表中的某一个field对应的value, 我们首先会获取到meta_value解析出其中的timestamp判断这个hash表是否过期， 如果没有过期， 我们可以拿到其中的version, 然后我们使用key, version，和field拼出data_key, 进而找到对应的data_value（如果存在的话)</p>
-<h2 id=""><a href="#" class="headerlink" title=""></a></h2><p>所以Hash类型下的key&#x2F;value就是以下构图：</p>
+<p>可以看到这里第一个 EncodeFixed32 装载 key 的 size，第二个 memepy 装载 key 的 data，第三个EncodeFixed32 装载 version,第四个 memcpy 装载 field 的 data. <strong>(data-key 组装完成)</strong></p>
+<p>如果我们需要查找一个 hash 表中的某一个 field 对应的 value, 我们首先会获取到 meta_value 解析出其中的timestamp 判断这个 hash 表是否过期， 如果没有过期， 我们可以拿到其中的 version, 然后我们使用 key, version，和 field 拼出 data_key, 进而找到对应的 data_value（如果存在的话)</p>
+<p>所以 Hash 类型下的 key&#x2F;value 就是以下构图：</p>
 <p><strong>Meta-key &#x2F; Meta-value:</strong></p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1101.49.36_64ac44b53ab89.png" alt="截屏2023-07-11 01.49.36.png"></p>
 <p><strong>Data-key &#x2F; Data-value:</strong></p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1110.17.07_64acbbc704143.png" alt="截屏2023-07-11 10.17.07.png"></p>
 <h2 id="3-List结构的存储"><a href="#3-List结构的存储" class="headerlink" title="3. List结构的存储"></a>3. List结构的存储</h2><h5 id="pika-x2F-src-x2F-storage-x2F-src-x2F-redis-list-cc"><a href="#pika-x2F-src-x2F-storage-x2F-src-x2F-redis-list-cc" class="headerlink" title="pika&#x2F;src&#x2F;storage&#x2F;src&#x2F;redis_list.cc"></a>pika&#x2F;src&#x2F;storage&#x2F;src&#x2F;redis_list.cc</h5><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1102.02.35_64ac47d9999f4.png" alt="截屏2023-07-11 02.02.35.png"></p>
-<p>blackwidow中的list由两部分构成，元数据(meta_key, meta_value), 和普通数据(data_key, data_value), 元数据中存储的主要是list链表的一些信息， 比如说当前list链表结点的的数量以及当前list链表的版本号和过期时间(用做秒删功能), 还有当前list链表的左右边界,普通数据实际上就是指的list中每一个结点中的数据，作为具体最后Rocksdb落盘的kv格式,这里我们以lpush命令来看看blackwidow怎么存储list结构，这里我们以第一次使用为例，我们会先Get在DB中是否有存在的key.</p>
+<p>blackwidow 中的 list 由两部分构成，元数据(meta_key, meta_value), 和普通数据(data_key, data_value), 元数据中存储的主要是 list 链表的一些信息， 比如说当前 list 链表结点的的数量以及当前 list 链表的版本号和过期时间(用做秒删功能), 还有当前 list 链表的左右边界,普通数据实际上就是指的 list 中每一个结点中的数据，作为具体最后 RocksDB 落盘的 KV 格式,这里我们以 lpush 命令来看看 blackwidow 怎么存储 list 结构，这里我们以第一次使用为例，我们会先 Get 在 DB 中是否有存在的 key.</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1102.04.57_64ac4890e82e4.png" alt="截屏2023-07-11 02.04.57.png"></p>
-<p>如果你仔细看了上文中的blackwidow的hash实现的话这里很容易看懂，首先是对values的组装,这里的values是一个vector，它不同于上面的hash，lpush命令可以一次set多个value，所以将所有的value装在vector中，所以这里就是把整形转为char*到str中，这里的UpdateVersion和上面的hash一样对version的设置</p>
+<p>如果你仔细看了上文中的 blackwidow 的 hash 实现的话这里很容易看懂，首先是对 values 的组装,这里的 values是一个 vector，它不同于上面的 hash，lpush 命令可以一次 set 多个 value，所以将所有的 value 装在 vector中，所以这里就是把整形转为 char* 到 str 中，这里的 UpdateVersion 和上面的 hash 一样对 version 的设置</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1102.22.25_64ac4c735b8d6.png" alt="截屏2023-07-11 02.22.25.png"></p>
-<p>这里我们看到是先对data-key进行组装,第一个EncodeFixed32组装key的size，第二个memcpy组装key的data，第三个EncodeFixed32组装version,第四个EncodeFixed64组装index. （<strong>data-key组装完成)</strong></p>
+<p>这里我们看到是先对 data-key 进行组装,第一个 EncodeFixed32 组装 key 的 size，第二个 memcpy 组装 key 的data，第三个 EncodeFixed32 组装 version,第四个 EncodeFixed64 组装 index. （<strong>data-key 组装完成)</strong></p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1102.26.20_64ac4d50d1cac.png" alt="截屏2023-07-11 02.26.20.png"></p>
-<p>接下来我们来看meta-value的组装，AppendTimestampAndVersion() + AppendIndex()由这两个函数组成，我们先看AppendTimestampAndVersion()</p>
+<p>接下来我们来看 meta-value 的组装，AppendTimestampAndVersion() + AppendIndex() 由这两个函数组成，我们先看 AppendTimestampAndVersion()</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1102.28.16_64ac4dc323239.png" alt="截屏2023-07-11 02.28.16.png"></p>
-<p>第一个memcpy组装list的size，第二个EncodeFixed32组装version,第三个EncodeFixed32组装ttl.三个都是4字节</p>
+<p>第一个 memcpy 组装 list 的size，第二个 EncodeFixed32 组装 version,第三个 EncodeFixed32 组装 ttl.三个都是4 字节</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1102.30.24_64ac4e4389ba2.png" alt="截屏2023-07-11 02.30.24.png"></p>
-<p>第一个EncodeFixed64组装left_index，第二个EncodeFixed64组装right_index.两个都是8字节</p>
-<p>所以List类型下的key&#x2F;value就是以下构图：</p>
+<p>第一个 EncodeFixed64 组装 left_index，第二个 EncodeFixed64 组装 right_index.两个都是 8 字节</p>
+<p>所以 List 类型下的 key&#x2F;value 就是以下构图：</p>
 <p><strong>Meta-key &#x2F; Meta-value:</strong></p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1102.39.55_64ac507e697fb.png" alt="截屏2023-07-11 02.39.55.png"></p>
 <p><strong>Data-key &#x2F; Data-value:</strong></p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1102.43.19_64ac514beb9d8.png" alt="截屏2023-07-11 02.43.19.png"></p>
 <h2 id="4-Set结构的存储"><a href="#4-Set结构的存储" class="headerlink" title="4. Set结构的存储"></a>4. Set结构的存储</h2><h5 id="pika-x2F-src-x2F-storage-x2F-src-x2F-redis-sets-cc"><a href="#pika-x2F-src-x2F-storage-x2F-src-x2F-redis-sets-cc" class="headerlink" title="pika&#x2F;src&#x2F;storage&#x2F;src&#x2F;redis_sets.cc"></a>pika&#x2F;src&#x2F;storage&#x2F;src&#x2F;redis_sets.cc</h5><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1102.47.08_64ac52479068b.png" alt="截屏2023-07-11 02.47.08.png"></p>
-<p>blackwidow中的set由两部分构成，元数据(meta_key, meta_value), 和普通数据(data_key, data_value), 元数据中存储的主要是set集合的一些信息， 比如说当前set集合member的数量以及当前set集合的版本号和过期时间(用做秒删功能), 普通数据实际上就是指的set集合中的member，作为具体最后Rocksdb落盘的kv格式,这里我们以Sadd命令看下blackwidow怎么实现set这种数据类型，这里我们以第一次使用为例，我们会先Get在DB中是否有存在的key.</p>
+<p>blackwidow 中的 set 由两部分构成，元数据(meta_key, meta_value), 和普通数据(data_key, data_value), 元数据中存储的主要是 set 集合的一些信息， 比如说当前 set 集合 member 的数量以及当前 set 集合的版本号和过期时间(用做秒删功能), 普通数据实际上就是指的 set 集合中的 member，作为具体最后 RocksDB 落盘的 KV 格式,这里我们以 Sadd 命令看下 blackwidow 怎么实现 set 这种数据类型，这里我们以第一次使用为例，我们会先 Get 在DB 中是否有存在的 key.</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1102.49.19_64ac52f79f3f1.png" alt="截屏2023-07-11 02.49.19.png"></p>
-<p>由于是第一次sadd，我们会走到s.IsNotFound这层逻辑里面，我们重点关注红色框里面的函数，这里EncodeFixed32把整形set的大小size替换成char*，</p>
+<p>由于是第一次 sadd，我们会走到 s.IsNotFound 这层逻辑里面，我们重点关注红色框里面的函数，这里EncodeFixed32 把整形 set 的大小 size 替换成 char*，</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1102.55.22_64ac541f080fc.png" alt="截屏2023-07-11 02.55.22.png"></p>
-<p>接着调用Encode函数对meta-value进行组装，这里的AppendTimestampAndVersion()我们看一下它的实现方法</p>
+<p>接着调用 Encode 函数对 meta-value 进行组装，这里的 AppendTimestampAndVersion() 我们看一下它的实现方法</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1102.56.28_64ac545fb416b.png" alt="截屏2023-07-11 02.56.28.png"></p>
-<p>第一个memcpy对set的大小组装，第二个EncodeFixed32对version组装，第三个EncodeFixed32对ttl组装 <strong>(meta-value组装完成)</strong></p>
+<p>第一个 memcpy 对 set 的大小组装，第二个 EncodeFixed32 对 version 组装，第三个 EncodeFixed32 对 ttl组装 <strong>(meta-value 组装完成)</strong></p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1102.58.55_64ac54f554350.png" alt="截屏2023-07-11 02.58.55.png"></p>
-<p>对data-key进行组装，第一个EncodeFixed32对key-size组装，第二个memcpy对key.data组装，第三个EncodeFix32对version组装，第四个memcpy对member进行组装. <strong>(data-key组装完成)</strong></p>
-<p>所以Set类型下的key&#x2F;value就是以下构图：</p>
+<p>对 data-key 进行组装，第一个 EncodeFixed32 对 key-size 组装，第二个 memcpy 对 key.data 组装，第三个EncodeFix32 对 version 组装，第四个 memcpy 对 member 进行组装. <strong>(data-key 组装完成)</strong></p>
+<p>所以 Set 类型下的 key&#x2F;value 就是以下构图：</p>
 <p><strong>Meta-key &#x2F; Meta-value:</strong></p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1103.08.25_64ac572d29309.png" alt="截屏2023-07-11 03.08.25.png"></p>
 <p><strong>Data-key &#x2F; Data-value:</strong></p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1103.10.35_64ac57b035bd4.png" alt="截屏2023-07-11 03.10.35.png"></p>
 <h2 id="5-ZSet结构的存储"><a href="#5-ZSet结构的存储" class="headerlink" title="5. ZSet结构的存储"></a>5. ZSet结构的存储</h2><h5 id="pika-x2F-src-x2F-storage-x2F-src-x2F-redis-zsets-cc"><a href="#pika-x2F-src-x2F-storage-x2F-src-x2F-redis-zsets-cc" class="headerlink" title="pika&#x2F;src&#x2F;storage&#x2F;src&#x2F;redis_zsets.cc"></a>pika&#x2F;src&#x2F;storage&#x2F;src&#x2F;redis_zsets.cc</h5><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1103.12.42_64ac586fb279c.png" alt="截屏2023-07-11 03.12.42.png"></p>
-<p>blackwidow中的zset由两部部分构成，元数据(meta_key, meta_value), 和普通数据(data_key, data_value), 元数据中存储的主要是zset集合的一些信息， 比如说当前zset集合member的数量以及当前zset集合的版本号和过期时间(用做秒删功能), 而普通数据就是指的zset中每个member以及对应的score, 由于zset这种数据结构比较特殊，需要按照memer进行排序，也需要按照score进行排序， 所以我们对于每一个zset我们会按照不同的格式存储两份普通数据, 在这里我们称为member to score和score to member，作为具体最后Rocksdb落盘的kv格式，我们以一个Zadd命令来看一下blackwidow怎么实现zset数据结构，这里我们以第一次使用为例，我们会先Get在DB中是否有存在的key.</p>
+<p>blackwidow 中的 zset 由两部部分构成，元数据(meta_key, meta_value), 和普通数据(data_key, data_value), 元数据中存储的主要是 zset 集合的一些信息， 比如说当前 zset 集合 member 的数量以及当前 zset 集合的版本号和过期时间(用做秒删功能), 而普通数据就是指的 zset 中每个 member 以及对应的 score, 由于 zset 这种数据结构比较特殊，需要按照 memer 进行排序，也需要按照 score 进行排序， 所以我们对于每一个 zset 我们会按照不同的格式存储两份普通数据, 在这里我们称为 member to score 和 score to member，作为具体最后 Rocksdb 落盘的KV 格式，我们以一个 Zadd 命令来看一下 blackwidow 怎么实现 zset 数据结构，这里我们以第一次使用为例，我们会先 Get 在 DB 中是否有存在的 key.</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1103.16.18_64ac595c8d160.png" alt="截屏2023-07-11 03.16.18.png"></p>
-<p>由于第一次执行Zadd,我们会走到s.IsNotFound逻辑，这里EncodeFixed32是将zset的整形size大小转成char*写进buf,我们先看对meta-value进行组装的Encode函数。</p>
+<p>由于第一次执行 Zadd,我们会走到 s.IsNotFound 逻辑，这里 EncodeFixed32 是将 zset 的整形 size 大小转成char* 写进 buf,我们先看对 meta-value 进行组装的 Encode 函数。</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1103.20.01_64ac59e508ea0.png" alt="截屏2023-07-11 03.20.01.png"></p>
-<p>这里我们先看下AppendTimestampAndVersion这个函数</p>
+<p>这里我们先看下 AppendTimestampAndVersion 这个函数</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1103.21.12_64ac5a2c412c5.png" alt="截屏2023-07-11 03.21.12.png"></p>
-<p>这里第一个memcpy对zset的size进行组装，第二个EncodeFixed32对version进行组装，第三个EncodeFixed32对ttl进行组装 <strong>(meta-value组装完毕)</strong></p>
+<p>这里第一个 memcpy 对 zset 的 size 进行组装，第二个 EncodeFixed32 对 version 进行组装，第三个EncodeFixed32 对 ttl 进行组装 <strong>(meta-value 组装完毕)</strong></p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1103.26.22_64ac5b64019a0.png" alt="截屏2023-07-11 03.26.22.png"></p>
-<p>接下来我们来看按member落盘的data-key,第一个EncodeFixed32对key的size组装，第二个memcpy对key的data组装，第三个EncodeFixed32对version进行组装，第四个memcpy对member进行组装 <strong>(data-key按membe落盘组装完毕)</strong></p>
+<p>接下来我们来看按 member 落盘的 data-key,第一个 EncodeFixed32 对 key 的 size 组装，第二个 memcpy 对 key 的 data组装，第三个 EncodeFixed32 对 version进行组装，第四个 memcpy 对 member 进行组装 <strong>(data-key 按 membe 落盘组装完毕)</strong></p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1103.30.50_64ac5c71bcb9c.png" alt="截屏2023-07-11 03.30.50.png"></p>
-<p>接下来我们来看按score落盘的data-key,第一个EncodeFixed32对key的size组装，第二个memcpy对key的data组装，第三个EncodeFixed32对version进行组装，第四个EncodeFix64对score进行组装，第五个memcpy对member进行组装 <strong>(data-key按score落盘组装完毕)</strong></p>
-<p>所以Zset类型下的key&#x2F;value就是以下构图：</p>
+<p>接下来我们来看按 score 落盘的 data-key,第一个 EncodeFixed32 对 key 的 size 组装，第二个 memcpy 对 key 的 data 组装，第三个 EncodeFixed32 对 version 进行组装，第四个 EncodeFix64 对 score 进行组装，第五个memcpy 对 member 进行组装 <strong>(data-key 按 score 落盘组装完毕)</strong></p>
+<p>所以 Zset 类型下的 key&#x2F;value 就是以下构图：</p>
 <p><strong>Meta-key &#x2F; Meta-value:</strong></p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1103.36.00_64ac5da482864.png" alt="截屏2023-07-11 03.36.00.png"></p>
 <p><strong>Data-key &#x2F; Data-value  By member:</strong></p>
@@ -227,7 +227,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/" data-id="cll20nztu00001prf3n034hcb" data-title="Blackwidow代码解析" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/" data-id="cll22ab050000cqrf0ausar8r" data-title="Blackwidow代码解析" class="article-share-link">Share</a>
       
       
       
@@ -315,11 +315,11 @@
           </li>
         
           <li>
-            <a href="/2023/07/12/Redis%E5%91%BD%E4%BB%A4/">Redis命令</a>
+            <a href="/2023/07/12/pika_exporter%E6%9C%AC%E5%9C%B0%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%96%87%E6%A1%A3/">Pika_exporter本地启动文档</a>
           </li>
         
           <li>
-            <a href="/2023/07/12/pika_exporter%E6%9C%AC%E5%9C%B0%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%96%87%E6%A1%A3/">Pika_exporter本地启动文档</a>
+            <a href="/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/">Blackwidow代码解析</a>
           </li>
         
       </ul>
