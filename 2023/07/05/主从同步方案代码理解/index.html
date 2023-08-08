@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0515.14.56_64a51876d4d44.png">
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0515.15.59_64a518b386a7a.png">
 <meta property="article:published_time" content="2023-07-05T04:46:20.000Z">
-<meta property="article:modified_time" content="2023-07-12T13:02:42.629Z">
+<meta property="article:modified_time" content="2023-08-08T07:49:06.624Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Blog">
 <meta name="twitter:card" content="summary">
@@ -111,10 +111,9 @@
 <p>命令介绍：对一个或多个保存二进制位的字符串 key 进行位元操作<span id="more"></span>，并将结果保存到 destkey 上</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; SET key1 &quot;foobar&quot;</span><br><span class="line">OK</span><br><span class="line">redis&gt; SET key2 &quot;abcdef&quot;</span><br><span class="line">OK</span><br><span class="line">redis&gt; BITOP AND dest key1 key2</span><br><span class="line">(integer) 6</span><br><span class="line">redis&gt; GET dest</span><br><span class="line">&quot;`bc`ab&quot;</span><br><span class="line">redis&gt;</span><br></pre></td></tr></table></figure>
 
-<p>背景：﻿从节点收到这样的命令之后，要再次读取后面的key对应的内容进行运算，但是没法保证从节点使用这两个key读取到的内容就和master读到的内容一样，会导致slave得到的运算结果和master不一致(结果存进dest_key,会导致主从的dest_key不一致)</p>
-<p>修改方案：binlog改成了一条set的binlog，写成了: set key result_to_dest （注: result_to_dest就是后面使用后面的key得到的运算结果，也就是存到了第一个key中的内容)</p>
-<p>修改代码前后对比：</p>
-<h5 id="include-x2F-pika-bit-h-126"><a href="#include-x2F-pika-bit-h-126" class="headerlink" title="include&#x2F;pika_bit.h +126"></a>include&#x2F;pika_bit.h +126</h5><p>修改前：</p>
+<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>﻿从节点收到这样的命令之后，要再次读取后面的key对应的内容进行运算，但是没法保证从节点使用这两个key读取到的内容就和master读到的内容一样，会导致slave得到的运算结果和master不一致(结果存进dest_key,会导致主从的dest_key不一致)</p>
+<h2 id="修改方案"><a href="#修改方案" class="headerlink" title="修改方案"></a>修改方案</h2><p>binlog改成了一条set的binlog，写成了: set key result_to_dest （注: result_to_dest就是后面使用后面的key得到的运算结果，也就是存到了第一个key中的内容)</p>
+<h2 id="修改代码前后对比"><a href="#修改代码前后对比" class="headerlink" title="修改代码前后对比"></a>修改代码前后对比</h2><h5 id="include-x2F-pika-bit-h-126"><a href="#include-x2F-pika-bit-h-126" class="headerlink" title="include&#x2F;pika_bit.h +126"></a>include&#x2F;pika_bit.h +126</h5><p>修改前：</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0514.43.28_64a511149920e.png" alt="截屏2023-07-05 14.43.28.png"></p>
 <p>修改后：</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0514.36.17_64a51124d552a.png" alt="截屏2023-07-05 14.36.17.png"></p>
@@ -137,11 +136,13 @@
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0515.14.56_64a51876d4d44.png" alt="截屏2023-07-05 15.14.56.png"></p>
 <p>修改后：</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0515.15.59_64a518b386a7a.png" alt="截屏2023-07-05 15.15.59.png"></p>
+<p>相关 PR: <a target="_blank" rel="noopener" href="https://github.com/OpenAtomFoundation/pika/pull/1658">#1658</a></p>
+<p>相关 Issue: <a target="_blank" rel="noopener" href="https://github.com/OpenAtomFoundation/pika/issues/1638">#1638</a></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/07/05/%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/" data-id="cll0ae7xf000jyurfh3gd3hlp" data-title="主从同步方案代码理解" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/07/05/%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/" data-id="cll207060000l92rffb4h51ue" data-title="主从同步方案代码理解" class="article-share-link">Share</a>
       
       
       
@@ -217,6 +218,10 @@
       <ul>
         
           <li>
+            <a href="/2023/08/06/Pika%E6%94%AF%E6%8C%81Zset%E9%99%90%E9%95%BF%E6%96%B9%E6%A1%88/">Pika支持Zset限长方案</a>
+          </li>
+        
+          <li>
             <a href="/2023/08/06/Pika%E7%9A%84Zset%E8%8C%83%E5%9B%B4%E5%88%A0%E9%99%A4%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%96%B9%E6%A1%88/">Pika的Zset范围删除性能优化方案</a>
           </li>
         
@@ -230,10 +235,6 @@
         
           <li>
             <a href="/2023/07/12/pika_exporter%E6%9C%AC%E5%9C%B0%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%96%87%E6%A1%A3/">Pika_exporter本地启动文档</a>
-          </li>
-        
-          <li>
-            <a href="/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/">Blackwidow代码解析</a>
           </li>
         
       </ul>
