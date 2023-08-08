@@ -6,12 +6,12 @@
   
   <title>Blackwidow代码解析 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="Blackwidow 代码解析背景我们希望通过阅读 Blackwidow 源码来学习这个存储引擎存储数据的方式">
+  <meta name="description" content="背景我们希望通过阅读 Blackwidow 源码来学习这个存储引擎存储数据的方式">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Blackwidow代码解析">
 <meta property="og:url" content="http://example.com/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Blackwidow 代码解析背景我们希望通过阅读 Blackwidow 源码来学习这个存储引擎存储数据的方式">
+<meta property="og:description" content="背景我们希望通过阅读 Blackwidow 源码来学习这个存储引擎存储数据的方式">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1109.58.58_64acb779b287d.png">
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1110.01.29_64acb82a1124e.png">
@@ -54,7 +54,7 @@
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1103.37.35_64ac5e11cfe70.png">
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1103.38.41_64ac5e453b1b2.png">
 <meta property="article:published_time" content="2023-07-10T23:32:18.000Z">
-<meta property="article:modified_time" content="2023-08-08T07:56:29.362Z">
+<meta property="article:modified_time" content="2023-08-08T08:04:31.723Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Blog">
 <meta name="twitter:card" content="summary">
@@ -137,7 +137,7 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h2 id="Blackwidow-代码解析"><a href="#Blackwidow-代码解析" class="headerlink" title="Blackwidow 代码解析"></a>Blackwidow 代码解析</h2><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>我们希望通过阅读 Blackwidow 源码来学习这个存储引擎存储数据的方式<span id="more"></span></p>
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>我们希望通过阅读 Blackwidow 源码来学习这个存储引擎存储数据的方式<span id="more"></span></p>
 <h3 id="1-String结构的存储"><a href="#1-String结构的存储" class="headerlink" title="1. String结构的存储"></a>1. String结构的存储</h3><h5 id="pika-x2F-src-x2F-storage-x2F-src-x2F-redis-strings-cc"><a href="#pika-x2F-src-x2F-storage-x2F-src-x2F-redis-strings-cc" class="headerlink" title="pika&#x2F;src&#x2F;storage&#x2F;src&#x2F;redis_strings.cc"></a>pika&#x2F;src&#x2F;storage&#x2F;src&#x2F;redis_strings.cc</h5><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1109.58.58_64acb779b287d.png" alt="截屏2023-07-11 09.58.58.png"></p>
 <p>String本质上就是Key, Value, 我们知道Rocksdb本身就是支持kv存储的， 我们为了实现Redis中的ttl功能，所以在value后面添加了4 Bytes用于存储timestamp, 作为最后Rocksdb落盘的kv格式，我们以一个Setex命令为例来看kv在Blackwidow下这个命令时怎么执行的，这里ScopeRecordLock给key上锁，防止多线程并发操作key，db_-&gt;Put操作的时候对value做了Encode操作(本篇中所有出现Encode的函数都代表对数据进行组装)，我们先看下SetRelativeTimestamp这个函数.</p>
 <p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-1110.01.29_64acb82a1124e.png" alt="截屏2023-07-11 10.01.29.png"></p>
@@ -227,7 +227,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/" data-id="cll20ls220001vkrf127nglwd" data-title="Blackwidow代码解析" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/" data-id="cll20mzxy0000xkrfbbrbbqon" data-title="Blackwidow代码解析" class="article-share-link">Share</a>
       
       
       
