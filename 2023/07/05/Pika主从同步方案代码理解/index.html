@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   
   
-  <title>主从同步方案代码理解 | Hexo</title>
+  <title>Pika主从同步方案代码理解 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="背景﻿从节点收到 Bitop 这样的命令之后，要再次读取后面的 key 对应的内容进行运算">
 <meta property="og:type" content="article">
-<meta property="og:title" content="主从同步方案代码理解">
-<meta property="og:url" content="http://example.com/2023/07/05/%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/index.html">
+<meta property="og:title" content="Pika主从同步方案代码理解">
+<meta property="og:url" content="http://example.com/2023/07/05/Pika%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="背景﻿从节点收到 Bitop 这样的命令之后，要再次读取后面的 key 对应的内容进行运算">
 <meta property="og:locale" content="en_US">
@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0515.14.56_64a51876d4d44.png">
 <meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0515.15.59_64a518b386a7a.png">
 <meta property="article:published_time" content="2023-07-05T04:46:20.000Z">
-<meta property="article:modified_time" content="2023-08-08T07:57:45.189Z">
+<meta property="article:modified_time" content="2023-08-08T08:05:05.167Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Blog">
 <meta name="twitter:card" content="summary">
@@ -85,9 +85,9 @@
 </header>
 
       <div class="outer">
-        <section id="main"><article id="post-主从同步方案代码理解" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+        <section id="main"><article id="post-Pika主从同步方案代码理解" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
-    <a href="/2023/07/05/%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/" class="article-date">
+    <a href="/2023/07/05/Pika%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/" class="article-date">
   <time class="dt-published" datetime="2023-07-05T04:46:20.000Z" itemprop="datePublished">2023-07-05</time>
 </a>
     
@@ -99,7 +99,7 @@
         
   
     <h1 class="p-name article-title" itemprop="headline name">
-      主从同步方案代码理解
+      Pika主从同步方案代码理解
     </h1>
   
 
@@ -144,7 +144,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/07/05/%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/" data-id="cll20mzyj000hxkrfd4fa1mh5" data-title="主从同步方案代码理解" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/07/05/Pika%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/" data-id="cll20nzu200011prf60bqgu76" data-title="Pika主从同步方案代码理解" class="article-share-link">Share</a>
       
       
       
