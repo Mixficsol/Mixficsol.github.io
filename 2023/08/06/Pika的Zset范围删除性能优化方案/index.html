@@ -15,13 +15,12 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/d7d34ae7-6f61-4f58-9fd0-d8b72ad56155">
 <meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/2d910e4d-8e30-47f5-a5b4-2e0782911f0d">
-<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/97b07fc1-3c65-4527-8e5f-098352cdc26e">
-<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/aefa42f9-6af1-4522-b569-c3131efe539c">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/b89ccd43-8248-4003-a570-d3f0c33422cf">
 <meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/8100908c-556c-47b5-8483-7de6811544f5">
 <meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/d17e9a0d-98a0-47bc-8c18-f11102914946">
-<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/a02a24c5-1d4d-40f0-a9c9-b2cdc87982ef">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/bcd98690-d8a6-4879-9be4-60f52049c9e3">
 <meta property="article:published_time" content="2023-08-06T14:24:28.256Z">
-<meta property="article:modified_time" content="2023-08-08T07:47:00.869Z">
+<meta property="article:modified_time" content="2023-08-09T03:45:15.111Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Blog">
 <meta name="twitter:card" content="summary">
@@ -112,14 +111,8 @@
 
 
 <p>可以看到在一个 for 循环里面对每个 key 进行遍历，然后用 batch 进行删除。最后统计出删的个数在 Meta-value中做更新。<br><img width="1025" alt="截屏2023-08-07 09 55 08" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/2d910e4d-8e30-47f5-a5b4-2e0782911f0d"></p>
-<p>通过一个 python 脚本的压测，我们每次往一个 Zset 里面插入 50w 条数据，然后进行折半删除，并循环进行这样的操作，可以看到最终测出平均 25w 元素在 0.6s 左右删除，平均每秒删除 41w 左右个元素。</p>
-<img width="1409" alt="截屏2023-08-07 10 06 28" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/97b07fc1-3c65-4527-8e5f-098352cdc26e">
-
-
-<img width="823" alt="截屏2023-08-07 10 53 58" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/aefa42f9-6af1-4522-b569-c3131efe539c">
-
-
-<p>这是在循环压测时 Pika 的一些 CPU，内存的占比，CPU 使用率在 40% ~ 95% 之间.</p>
+<p>通过一个 python 脚本的压测，我们每次往一个 Zset 里面插入 50w 条数据，然后进行折半删除，并循环进行这样的操作，可以看到最终测出平均 25w 元素在 0.6s 左右删除，平均每秒删除 41w 左右个元素。<br><img width="972" alt="截屏2023-08-09 10 58 15" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/b89ccd43-8248-4003-a570-d3f0c33422cf"></p>
+<p>这是在循环压测时 Pika 的一些 CPU，内存的占比，CPU 使用率在  100% 左右.</p>
 <h3 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h3><p>在新的 ZRemrangebyscore 的实现方法中，我们采用 RocksDB 中的 DeleteRange 方法，这个函数可以根据给定的一个 min, max 的 key， 将范围内的 key 全部删除，不再进行迭代删除，具体实现方法如下：</p>
 <img width="1495" alt="截屏2023-08-07 10 17 59" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/8100908c-556c-47b5-8483-7de6811544f5">
 
@@ -128,16 +121,16 @@
 <img width="1378" alt="截屏2023-08-07 10 23 52" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/d17e9a0d-98a0-47bc-8c18-f11102914946">
 
 <p>可以看到同样是每次往一个 Zset 里面插入 50w 条数据，然后进行折半删除，并循环进行这样的操作，可以看到最终测出平均 25w 元素在 0.34s 左右删除，平均每秒删除 72w 左右个元素，比之前提升了差不多 50% 的性能</p>
-<img width="817" alt="截屏2023-08-07 10 54 37" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/a02a24c5-1d4d-40f0-a9c9-b2cdc87982ef">
+<img width="1190" alt="截屏2023-08-09 11 41 31" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/bcd98690-d8a6-4879-9be4-60f52049c9e3">
 
-<p>对比之前没改之前的 CPU 占比，我们发现在新方法实现下 CPU 的占比会比之前高，稳定在 90% ~ 130% 之间.</p>
-<p>相关 PR: <a target="_blank" rel="noopener" href="https://github.com/OpenAtomFoundation/pika/pull/1853">#1853</a></p>
-<p>相关 Issue: <a target="_blank" rel="noopener" href="https://github.com/OpenAtomFoundation/pika/issues/1119">#1119</a></p>
+
+
+<p>对比之前没改之前的 CPU 占比，我们发现在新方法实现下 CPU 和之前上涨了50%左右</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/08/06/Pika%E7%9A%84Zset%E8%8C%83%E5%9B%B4%E5%88%A0%E9%99%A4%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%96%B9%E6%A1%88/" data-id="cll22ab0o000fcqrfd8vlcntp" data-title="Pika的Zset范围删除性能优化方案" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/08/06/Pika%E7%9A%84Zset%E8%8C%83%E5%9B%B4%E5%88%A0%E9%99%A4%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%96%B9%E6%A1%88/" data-id="cll36tl4b000dgarfb1q26ptb" data-title="Pika的Zset范围删除性能优化方案" class="article-share-link">Share</a>
       
       
       
