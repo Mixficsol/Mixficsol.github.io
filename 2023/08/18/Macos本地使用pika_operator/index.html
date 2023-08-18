@@ -4,14 +4,19 @@
   <meta charset="utf-8">
   
   
-  <title>Hexo</title>
+  <title>Macos本地使用pika_operator | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://example.com/page/2/index.html">
+  <meta name="description" content="背景验证 pika_operator 功能">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Macos本地使用pika_operator">
+<meta property="og:url" content="http://example.com/2023/08/18/Macos%E6%9C%AC%E5%9C%B0%E4%BD%BF%E7%94%A8pika_operator/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="背景验证 pika_operator 功能">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-08-18T07:06:12.043Z">
+<meta property="article:modified_time" content="2023-08-18T08:21:03.249Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Blog">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
@@ -69,12 +74,10 @@
 </header>
 
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-Pika代码理解(二)" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+        <section id="main"><article id="post-Macos本地使用pika_operator" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
-    <a href="/2023/04/24/Pika%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3(%E4%BA%8C)/" class="article-date">
-  <time class="dt-published" datetime="2023-04-24T10:40:00.358Z" itemprop="datePublished">2023-04-24</time>
+    <a href="/2023/08/18/Macos%E6%9C%AC%E5%9C%B0%E4%BD%BF%E7%94%A8pika_operator/" class="article-date">
+  <time class="dt-published" datetime="2023-08-18T07:06:12.043Z" itemprop="datePublished">2023-08-18</time>
 </a>
     
   </div>
@@ -84,8 +87,8 @@
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2023/04/24/Pika%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3(%E4%BA%8C)/">Pika代码理解(二)</a>
+    <h1 class="p-name article-title" itemprop="headline name">
+      Macos本地使用pika_operator
     </h1>
   
 
@@ -93,16 +96,51 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <p>紧接着对 Pika 代码理解(一)的介绍，我在对服务器与客户端的建连这边没弄懂
-        
-          <p class="article-more-link">
-            <a href="/2023/04/24/Pika%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3(%E4%BA%8C)/#more">Read More</a>
-          </p>
-        
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>验证 pika_operator 功能<span id="more"></span></p>
+<h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><ol start="0">
+<li><p>启动 Docker</p>
+   <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">open -a Docker</span><br></pre></td></tr></table></figure>
+
+<p>   这里我配置的规格是 8 核 CPU，16G 内存</p>
+<p>   ![截屏2023-08-18 15.11.46](&#x2F;var&#x2F;folders&#x2F;x_&#x2F;596n5q5x21d528hwy9trmctc0000gn&#x2F;T&#x2F;TemporaryItems&#x2F;NSIRD_screencaptureui_mPfrgC&#x2F;截屏2023-08-18 15.11.46.png)</p>
+</li>
+<li><p>下载 KIND</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew install kind</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建一个 KIND 集群</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kind create cluster</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>下载 kbcli</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">url -fsSL https://kubeblocks.io/installer/install_cli.sh | bash</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>下载l kubeblock</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kbcli kubeblocks install --version 0.5.3 -v1</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>检查 Kubublocks 状态</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kbcli kubeblocks status</span><br></pre></td></tr></table></figure>
+
+<p>![截屏2023-08-18 15.13.06](&#x2F;var&#x2F;folders&#x2F;x_&#x2F;596n5q5x21d528hwy9trmctc0000gn&#x2F;T&#x2F;TemporaryItems&#x2F;NSIRD_screencaptureui_3mRgF5&#x2F;截屏2023-08-18 15.13.06.png)</p>
+</li>
+<li><p>进入 kubeblocks_helm 目录</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> pika/tools/kubeblocks_helm</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>下载 Pika</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">helm install pika ./pika</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>下载 Pika-cluster</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">helm install pika-cluster ./pika-cluster</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>查看集群启动状态</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl get pods --all-namespaces -o wide</span><br></pre></td></tr></table></figure>
+
+<p>![截屏2023-08-18 15.18.01](&#x2F;Users&#x2F;Mixficsol&#x2F;Desktop&#x2F;截屏2023-08-18 15.18.01.png)</p>
+</li>
+</ol>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/04/24/Pika%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3(%E4%BA%8C)/" data-id="cllgbna2p00044prf9e8sgnqt" data-title="Pika代码理解(二)" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/08/18/Macos%E6%9C%AC%E5%9C%B0%E4%BD%BF%E7%94%A8pika_operator/" data-id="cllgbna2l00014prfds8wdh5v" data-title="Macos本地使用pika_operator" class="article-share-link">Share</a>
       
       
       
@@ -111,62 +149,20 @@
     </footer>
   </div>
   
-</article>
-
-
-
+    
+<nav id="article-nav">
   
-    <article id="post-Pika代码理解(一)" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2023/04/20/Pika%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3(%E4%B8%80)/" class="article-date">
-  <time class="dt-published" datetime="2023-04-20T10:05:42.492Z" itemprop="datePublished">2023-04-20</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2023/04/20/Pika%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3(%E4%B8%80)/">Pika代码理解(一)</a>
-    </h1>
+    <a href="/2023/08/15/%E9%83%A8%E7%BD%B2Kubernetes%E9%9B%86%E7%BE%A4/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">部署Kubernetes集群</div>
+    </a>
   
+</nav>
 
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>在 Pika 的 src 下的 pika.cc 中的 main 函数中首先通过函数创造出 PikaServer 实例
-        
-          <p class="article-more-link">
-            <a href="/2023/04/20/Pika%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3(%E4%B8%80)/#more">Read More</a>
-          </p>
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2023/04/20/Pika%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3(%E4%B8%80)/" data-id="cllgbna2q00054prf81n8bhur" data-title="Pika代码理解(一)" class="article-share-link">Share</a>
-      
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
-
-    </footer>
-  </div>
   
 </article>
 
-
-
-  
-
-
-  <nav id="page-nav">
-    
-    <a class="extend prev" rel="prev" href="/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
-  </nav>
 
 </section>
         
