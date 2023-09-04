@@ -93,45 +93,16 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>Pika 目前处于切主操作时，其他从节点会和新主节点进行全量同步，但是在执行切主操作发生之前，原本的从节点和新主节点的数据是基本一致的 (因为在旧主正常运行时，各个从节点的数据基本一致)，所以我们认为在做切主操作时我们应该进行的是从节点与新主节点之间执行增量同步</p>
-<h2 id="改进方案"><a href="#改进方案" class="headerlink" title="改进方案"></a>改进方案</h2><p>当第一个从实例对主进行 slaveof ip port 的时候，主节点生成 ReplicationID，将生成的 ReplicationID 持久化到从节点。Pika 实例启动时候的 ReplicationID:Offset 默认为 0：-1；同时我们提供一个接口给运维的同学 ClearReplicateID，这个命令是运维的同学对离开集群的节点进行操作的，功能是将离开集群节点的 ReplicationID 置为默认的 0</p>
-<h2 id="全量复制和增量复制判断"><a href="#全量复制和增量复制判断" class="headerlink" title="全量复制和增量复制判断"></a>全量复制和增量复制判断</h2><p>当一个从实例连接主实例时，发送 slaveof 命令去进行主从同步，slave 会把它持有的 ReplicationID 发送给 master，与 master 的 ReplicationID 和 Offset 做比较，这样就能获取缺失的增量数据。但是如果 master 的 buffer 中 Offset 偏移量过大或者从实例所持有的 ReplicationID 在当前的 master 中匹配不到，那么从实例就会进行一次全量同步。</p>
-<p>当一个从实例需要重启时，重启后如果想要只进行增量同步，只需要同步 ReplicationID 及 Offset 给主实例即可。<br>增量复制及全量复制的几种情况：</p>
-<ol>
-<li><p>从实例的 ReplicationID 在主实例中匹配不到，Offset &#x3D; -1，全量复制</p>
-</li>
-<li><p>从实例的 ReplicationID 在主实例中能匹配到，Offset 偏移量过大，全量复制</p>
-</li>
-<li><p>从实例的 ReplicationID 在主实例的 ReplicationID 能够匹配到，Offset 偏移量在范围内，增量复制</p>
-</li>
-</ol>
-<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><ul>
-<li><p><strong>ClearReplicateID 底层调用的是 configset 去更改 ReplicationID 的值，这个值是在内存中，如果此时实例宕机重启了那么 ReplicationID 将查询不到?</strong></p>
-<p>我们的想法是执行 ClearReplicateID 的时候调用 configset 修改 ReplicationID 值再重载一下 rewrite 方法并调用使其将 ReplicationID 的值持久化到硬盘上</p>
-</li>
-<li><p><strong>一个集群内的 ReplicationID 一定是唯一的吗?</strong></p>
-<p>是的，一个集群只维护一个 ReplicationID，ReplicationID 生成与第一个从 slaveof 主节点的时候，由主节点生成持久化到 config 文件中，并且将 Replication ID 持久化到从节点的 config 文件中</p>
-</li>
-<li><p><strong>从节点掉线重连之后，ReplicationID 还能获取到吗?</strong></p>
-<p>可以的，因为 ReplicationID 是持久化到每个实例的配置文件中，所以每次上线时候可以获取到 ReplicationID</p>
-</li>
-<li><p><strong>怎么去判断 ReplicartionID 的生成条件?</strong></p>
-<p>由于每个实例启动的时候 ReplicationID 默认为空字符串，只有当主从第一次数据同步时，系统判断主节点自身的 ReplicationID 是否为空，如果是空，则生成 ReplicationID 否则将不生成。所以当有切主操作时，不会生成新的 ReplicationID，我们可以认为当一个集群第一次建立时，这个 ReplicationID 的值就确立了并且不会更改，除非这个集群完全消失</p>
-</li>
-<li><p><strong>ReplicationID 什么时候清空?</strong></p>
-<p>有两种情况：</p>
-<ol>
-<li>当实例调用 shutdown 进程退出的时候，调用 ClearReplicateID 清空 ReplicationID</li>
-<li>当实例离开当前集群的时候，调用 ClearReplicateID 清空 ReplicationID</li>
-</ol>
-<p>注意线上环境的时候这个操作一般是运维的同学执行</p>
-</li>
-</ul>
-
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>Pika 目前处于切主操作时，其他从节点会和新主节点进行全量同步
+        
+          <p class="article-more-link">
+            <a href="/2023/08/31/Pika%20ReplicationID%20%E6%96%B9%E6%A1%88/#more">Read More</a>
+          </p>
+        
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/08/31/Pika%20ReplicationID%20%E6%96%B9%E6%A1%88/" data-id="clm4qjlge0004629ka4lh7zoq" data-title="Pika ReplicationID 方案" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/08/31/Pika%20ReplicationID%20%E6%96%B9%E6%A1%88/" data-id="clm4qlxsc0004by9kfolqb434" data-title="Pika ReplicationID 方案" class="article-share-link">Share</a>
       
       
       
@@ -167,36 +138,16 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>Pika 当前的 sentinel 会在主节点挂掉后进行备升主，但是挂掉后起来的主节点起来后依然是主，需要优化，当前的 sentinel 会每个 5s 检查一次所有主从状态，每1 秒检查预离线主机状态，决定是否自动主从切换。</p>
-<h2 id="改进方案"><a href="#改进方案" class="headerlink" title="改进方案"></a>改进方案</h2><p>对于已经掉线的主节点，我们进行逻辑删除，让其 ReplicaGroup 置为 false，使其流量不再打到旧主节点上</p>
-<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><ul>
-<li><p><strong>在不考虑 Codis 的情况下，如果有一个一主三从的 Pika 集群，手动 kill 掉主节点，会自动触发从节点升主吗?</strong></p>
-<p>不会</p>
-</li>
-<li><p><strong>在考虑 Codis 的情况下，在一个 Group 中有一主三从的 Pika 集群，如果手动把主节点 kill 掉，此时 sentinel 会自动触发从节点升主吗？如果会的话这时候旧主节点重新连上来是什么状态？其他从节点需要手动执行 slaveof 才能同步数据吗？</strong></p>
-<p>会自动触发从节点升主，旧主节点重新连上来是 Master 状态，Codis 通过执行命令让其他节点执行 slaveof 命令，不需要人手动执行</p>
-</li>
-<li><p><strong>如果 Codis 能自动实现切主操作并且不考虑这个 Group 此时有新加进节点的情况，那么在触发从节点同步新主数据的时候，是不是唯独没同步的就是之前旧主的节点</strong>？</p>
-<p>是的</p>
-</li>
-<li><p><strong>是因为旧主的 info replication 的 role 是 Master 所以不能同步吗？</strong></p>
-<p>是的</p>
-</li>
-<li><p><strong>但是有个问题是旧主的 role 依然是 Master，这个需要在哪里进行改变身份呢？(Pika 层面还是 Codis 层面)</strong></p>
-<p>Codis 层面，Codis 发送 slaveof 命令给 Pika 让其实现旧主的 role 切换成 salve</p>
-</li>
-<li><p><strong>为什么不用 codis 自带的 fe 上有 sentinel 按钮的方案？</strong></p>
-<p>Codis 自带的 sentinel 比较被动，目前我们实现的 sentinel 每隔 5 秒会主动对 Group 中的节点进行检测</p>
-</li>
-<li><p><strong>切主过程中怎么从从节点中选主？是 offset 最大的作为新主吗？</strong></p>
-<p>检测节点的健康状态和 offset 最大节点作为新的主节点</p>
-</li>
-</ul>
-
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>Pika 当前的 sentinel 会在主节点挂掉后进行备升主
+        
+          <p class="article-more-link">
+            <a href="/2023/08/30/Codis%20sentinel%20%E5%8D%87%E7%BA%A7%E6%96%B9%E6%A1%88/#more">Read More</a>
+          </p>
+        
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/08/30/Codis%20sentinel%20%E5%8D%87%E7%BA%A7%E6%96%B9%E6%A1%88/" data-id="clm4qjlga0001629k95qm3cdq" data-title="Codis sentinel升级方案" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/08/30/Codis%20sentinel%20%E5%8D%87%E7%BA%A7%E6%96%B9%E6%A1%88/" data-id="clm4qlxs80001by9k5ynebta3" data-title="Codis sentinel升级方案" class="article-share-link">Share</a>
       
       
       
@@ -241,7 +192,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/08/18/Macos%20%E6%9C%AC%E5%9C%B0%E4%BD%BF%E7%94%A8%20pika_operator/" data-id="clm4qjlgd0003629kfyq9g6tt" data-title="Macos本地使用pika_operator" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/08/18/Macos%20%E6%9C%AC%E5%9C%B0%E4%BD%BF%E7%94%A8%20pika_operator/" data-id="clm4qlxsb0003by9k8iyohtfy" data-title="Macos本地使用pika_operator" class="article-share-link">Share</a>
       
       
       
@@ -286,7 +237,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/08/15/%E9%83%A8%E7%BD%B2Kubernetes%E9%9B%86%E7%BE%A4/" data-id="clm4qjlgm000p629k8utcaaco" data-title="部署Kubernetes集群" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/08/15/%E9%83%A8%E7%BD%B2Kubernetes%E9%9B%86%E7%BE%A4/" data-id="clm4qlxsm000pby9k98mfdcp6" data-title="部署Kubernetes集群" class="article-share-link">Share</a>
       
       
       
@@ -331,7 +282,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/08/06/Pika%E6%94%AF%E6%8C%81Zset%E9%99%90%E9%95%BF%E6%96%B9%E6%A1%88/" data-id="clm4qjlgk000h629kf5yf3x69" data-title="Pika支持Zset限长方案" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/08/06/Pika%E6%94%AF%E6%8C%81Zset%E9%99%90%E9%95%BF%E6%96%B9%E6%A1%88/" data-id="clm4qlxsj000hby9kffx6c6ev" data-title="Pika支持Zset限长方案" class="article-share-link">Share</a>
       
       
       
@@ -376,7 +327,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/08/06/Pika%E7%9A%84Zset%E8%8C%83%E5%9B%B4%E5%88%A0%E9%99%A4%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%96%B9%E6%A1%88/" data-id="clm4qjlgk000j629kedpob454" data-title="Pika的Zset范围删除性能优化方案" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/08/06/Pika%E7%9A%84Zset%E8%8C%83%E5%9B%B4%E5%88%A0%E9%99%A4%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%96%B9%E6%A1%88/" data-id="clm4qlxsk000jby9k6wlt3869" data-title="Pika的Zset范围删除性能优化方案" class="article-share-link">Share</a>
       
       
       
@@ -421,7 +372,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/08/02/Pika%E7%A3%81%E7%9B%98%E5%AE%B9%E9%87%8F%E6%BB%A1%E6%81%A2%E5%A4%8D%E6%96%B9%E6%A1%88/" data-id="clm4qjlgl000l629k95ldbvef" data-title="Pika磁盘容量满恢复方案" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/08/02/Pika%E7%A3%81%E7%9B%98%E5%AE%B9%E9%87%8F%E6%BB%A1%E6%81%A2%E5%A4%8D%E6%96%B9%E6%A1%88/" data-id="clm4qlxsi000fby9kcscwg55t" data-title="Pika磁盘容量满恢复方案" class="article-share-link">Share</a>
       
       
       
@@ -466,7 +417,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/07/12/pika_exporter%E6%9C%AC%E5%9C%B0%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%96%87%E6%A1%A3/" data-id="clm4qjlgm000n629kgn9cdp69" data-title="Pika_exporter本地启动文档" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/07/12/pika_exporter%E6%9C%AC%E5%9C%B0%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%96%87%E6%A1%A3/" data-id="clm4qlxsl000nby9k1ti85niv" data-title="Pika_exporter本地启动文档" class="article-share-link">Share</a>
       
       
       
@@ -511,7 +462,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/" data-id="clm4qjlfy0000629k0tdredak" data-title="Blackwidow代码解析" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/" data-id="clm4qlxrw0000by9k8nvjeivo" data-title="Blackwidow代码解析" class="article-share-link">Share</a>
       
       
       
@@ -556,7 +507,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/07/06/Pika%E5%91%BD%E4%BB%A4%E8%80%97%E6%97%B6%E7%BB%9F%E8%AE%A1%E5%8A%9F%E8%83%BD%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/" data-id="clm4qjlgi000d629k158zhpnu" data-title="Pika命令耗时统计功能技术文档" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/07/06/Pika%E5%91%BD%E4%BB%A4%E8%80%97%E6%97%B6%E7%BB%9F%E8%AE%A1%E5%8A%9F%E8%83%BD%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/" data-id="clm4qlxsk000lby9k60f3bqco" data-title="Pika命令耗时统计功能技术文档" class="article-share-link">Share</a>
       
       
       

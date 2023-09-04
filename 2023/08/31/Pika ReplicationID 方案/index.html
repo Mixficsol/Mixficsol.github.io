@@ -6,15 +6,15 @@
   
   <title>Pika ReplicationID 方案 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="背景Pika 目前处于切主操作时，其他从节点会和新主节点进行全量同步，但是在执行切主操作发生之前，原本的从节点和新主节点的数据是基本一致的 (因为在旧主正常运行时，各个从节点的数据基本一致)，所以我们认为在做切主操作时我们应该进行的是从节点与新主节点之间执行增量同步 改进方案当第一个从实例对主进行 slaveof ip port 的时候，主节点生成 ReplicationID，将生成的 Repli">
+  <meta name="description" content="背景Pika 目前处于切主操作时，其他从节点会和新主节点进行全量同步">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Pika ReplicationID 方案">
 <meta property="og:url" content="http://example.com/2023/08/31/Pika%20ReplicationID%20%E6%96%B9%E6%A1%88/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="背景Pika 目前处于切主操作时，其他从节点会和新主节点进行全量同步，但是在执行切主操作发生之前，原本的从节点和新主节点的数据是基本一致的 (因为在旧主正常运行时，各个从节点的数据基本一致)，所以我们认为在做切主操作时我们应该进行的是从节点与新主节点之间执行增量同步 改进方案当第一个从实例对主进行 slaveof ip port 的时候，主节点生成 ReplicationID，将生成的 Repli">
+<meta property="og:description" content="背景Pika 目前处于切主操作时，其他从节点会和新主节点进行全量同步">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2023-08-31T15:30:39.580Z">
-<meta property="article:modified_time" content="2023-09-04T10:24:17.206Z">
+<meta property="article:modified_time" content="2023-09-04T10:26:35.204Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Blog">
 <meta name="twitter:card" content="summary">
@@ -96,7 +96,7 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>Pika 目前处于切主操作时，其他从节点会和新主节点进行全量同步，但是在执行切主操作发生之前，原本的从节点和新主节点的数据是基本一致的 (因为在旧主正常运行时，各个从节点的数据基本一致)，所以我们认为在做切主操作时我们应该进行的是从节点与新主节点之间执行增量同步</p>
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>Pika 目前处于切主操作时，其他从节点会和新主节点进行全量同步<span id="more"></span>，但是在执行切主操作发生之前，原本的从节点和新主节点的数据是基本一致的 (因为在旧主正常运行时，各个从节点的数据基本一致)，所以我们认为在做切主操作时我们应该进行的是从节点与新主节点之间执行增量同步</p>
 <h2 id="改进方案"><a href="#改进方案" class="headerlink" title="改进方案"></a>改进方案</h2><p>当第一个从实例对主进行 slaveof ip port 的时候，主节点生成 ReplicationID，将生成的 ReplicationID 持久化到从节点。Pika 实例启动时候的 ReplicationID:Offset 默认为 0：-1；同时我们提供一个接口给运维的同学 ClearReplicateID，这个命令是运维的同学对离开集群的节点进行操作的，功能是将离开集群节点的 ReplicationID 置为默认的 0</p>
 <h2 id="全量复制和增量复制判断"><a href="#全量复制和增量复制判断" class="headerlink" title="全量复制和增量复制判断"></a>全量复制和增量复制判断</h2><p>当一个从实例连接主实例时，发送 slaveof 命令去进行主从同步，slave 会把它持有的 ReplicationID 发送给 master，与 master 的 ReplicationID 和 Offset 做比较，这样就能获取缺失的增量数据。但是如果 master 的 buffer 中 Offset 偏移量过大或者从实例所持有的 ReplicationID 在当前的 master 中匹配不到，那么从实例就会进行一次全量同步。</p>
 <p>当一个从实例需要重启时，重启后如果想要只进行增量同步，只需要同步 ReplicationID 及 Offset 给主实例即可。<br>增量复制及全量复制的几种情况：</p>
@@ -134,7 +134,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/08/31/Pika%20ReplicationID%20%E6%96%B9%E6%A1%88/" data-id="clm4qjlge0004629ka4lh7zoq" data-title="Pika ReplicationID 方案" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/08/31/Pika%20ReplicationID%20%E6%96%B9%E6%A1%88/" data-id="clm4qlxsc0004by9kfolqb434" data-title="Pika ReplicationID 方案" class="article-share-link">Share</a>
       
       
       
