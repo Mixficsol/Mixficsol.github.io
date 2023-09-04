@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>Codis sentinel升级方案 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="背景Pika 当前的 sentinel 会在主节点挂掉后进行备升主，但是挂掉后起来的主节点起来后依然是主，需要优化，当前的 sentinel 会每个 5s 检查一次所有主从状态，每1 秒检查预离线主机状态，决定是否自动主从切换。 改进方案对于已经掉线的主节点，我们进行逻辑删除，让其 ReplicaGroup 置为 false，使其流量不再打到旧主节点上 问题 在不考虑 Codis 的情况下，如果有">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Codis sentinel升级方案">
+<meta property="og:url" content="http://example.com/2023/08/30/Codis%20sentinel%20%E5%8D%87%E7%BA%A7%E6%96%B9%E6%A1%88/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="背景Pika 当前的 sentinel 会在主节点挂掉后进行备升主，但是挂掉后起来的主节点起来后依然是主，需要优化，当前的 sentinel 会每个 5s 检查一次所有主从状态，每1 秒检查预离线主机状态，决定是否自动主从切换。 改进方案对于已经掉线的主节点，我们进行逻辑删除，让其 ReplicaGroup 置为 false，使其流量不再打到旧主节点上 问题 在不考虑 Codis 的情况下，如果有">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-08-30T06:06:06.230Z">
+<meta property="article:modified_time" content="2023-09-04T10:24:42.571Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Blog">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-Codis sentinel 升级方案" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/08/30/Codis%20sentinel%20%E5%8D%87%E7%BA%A7%E6%96%B9%E6%A1%88/" class="article-date">
+  <time class="dt-published" datetime="2023-08-30T06:06:06.230Z" itemprop="datePublished">2023-08-30</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      Codis sentinel升级方案
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>Pika 当前的 sentinel 会在主节点挂掉后进行备升主，但是挂掉后起来的主节点起来后依然是主，需要优化，当前的 sentinel 会每个 5s 检查一次所有主从状态，每1 秒检查预离线主机状态，决定是否自动主从切换。</p>
+<h2 id="改进方案"><a href="#改进方案" class="headerlink" title="改进方案"></a>改进方案</h2><p>对于已经掉线的主节点，我们进行逻辑删除，让其 ReplicaGroup 置为 false，使其流量不再打到旧主节点上</p>
+<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><ul>
+<li><p><strong>在不考虑 Codis 的情况下，如果有一个一主三从的 Pika 集群，手动 kill 掉主节点，会自动触发从节点升主吗?</strong></p>
+<p>不会</p>
+</li>
+<li><p><strong>在考虑 Codis 的情况下，在一个 Group 中有一主三从的 Pika 集群，如果手动把主节点 kill 掉，此时 sentinel 会自动触发从节点升主吗？如果会的话这时候旧主节点重新连上来是什么状态？其他从节点需要手动执行 slaveof 才能同步数据吗？</strong></p>
+<p>会自动触发从节点升主，旧主节点重新连上来是 Master 状态，Codis 通过执行命令让其他节点执行 slaveof 命令，不需要人手动执行</p>
+</li>
+<li><p><strong>如果 Codis 能自动实现切主操作并且不考虑这个 Group 此时有新加进节点的情况，那么在触发从节点同步新主数据的时候，是不是唯独没同步的就是之前旧主的节点</strong>？</p>
+<p>是的</p>
+</li>
+<li><p><strong>是因为旧主的 info replication 的 role 是 Master 所以不能同步吗？</strong></p>
+<p>是的</p>
+</li>
+<li><p><strong>但是有个问题是旧主的 role 依然是 Master，这个需要在哪里进行改变身份呢？(Pika 层面还是 Codis 层面)</strong></p>
+<p>Codis 层面，Codis 发送 slaveof 命令给 Pika 让其实现旧主的 role 切换成 salve</p>
+</li>
+<li><p><strong>为什么不用 codis 自带的 fe 上有 sentinel 按钮的方案？</strong></p>
+<p>Codis 自带的 sentinel 比较被动，目前我们实现的 sentinel 每隔 5 秒会主动对 Group 中的节点进行检测</p>
+</li>
+<li><p><strong>切主过程中怎么从从节点中选主？是 offset 最大的作为新主吗？</strong></p>
+<p>检测节点的健康状态和 offset 最大节点作为新的主节点</p>
+</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/08/30/Codis%20sentinel%20%E5%8D%87%E7%BA%A7%E6%96%B9%E6%A1%88/" data-id="clm4qjlga0001629k95qm3cdq" data-title="Codis sentinel升级方案" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2023/08/31/Pika%20ReplicationID%20%E6%96%B9%E6%A1%88/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Pika ReplicationID 方案
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2023/08/18/Macos%20%E6%9C%AC%E5%9C%B0%E4%BD%BF%E7%94%A8%20pika_operator/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Macos本地使用pika_operator</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blog/" style="font-size: 10px;">Blog</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/08/31/Pika%20ReplicationID%20%E6%96%B9%E6%A1%88/">Pika ReplicationID 方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/08/30/Codis%20sentinel%20%E5%8D%87%E7%BA%A7%E6%96%B9%E6%A1%88/">Codis sentinel升级方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/08/18/Macos%20%E6%9C%AC%E5%9C%B0%E4%BD%BF%E7%94%A8%20pika_operator/">Macos本地使用pika_operator</a>
+          </li>
+        
+          <li>
+            <a href="/2023/08/15/%E9%83%A8%E7%BD%B2Kubernetes%E9%9B%86%E7%BE%A4/">部署Kubernetes集群</a>
+          </li>
+        
+          <li>
+            <a href="/2023/08/06/Pika%E6%94%AF%E6%8C%81Zset%E9%99%90%E9%95%BF%E6%96%B9%E6%A1%88/">Pika支持Zset限长方案</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
