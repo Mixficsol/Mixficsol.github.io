@@ -14,7 +14,7 @@
 <meta property="og:description" content="背景Pika 目前处于切主操作时，其他从节点会和新主节点进行全量同步">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2023-08-31T15:30:39.580Z">
-<meta property="article:modified_time" content="2023-09-04T10:26:35.204Z">
+<meta property="article:modified_time" content="2023-09-04T11:58:02.718Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Blog">
 <meta name="twitter:card" content="summary">
@@ -128,13 +128,26 @@
 <li>当实例离开当前集群的时候，调用 ClearReplicateID 清空 ReplicationID</li>
 </ol>
 <p>注意线上环境的时候这个操作一般是运维的同学执行</p>
+<p>​</p>
 </li>
+</ul>
+<h2 id="异常情况"><a href="#异常情况" class="headerlink" title="异常情况"></a>异常情况</h2><ul>
+<li>实例起来时用 info replication 查看 replicationID 是否是空</li>
+<li>主从复制时查看 conf 文件中是否 replicationID 已经持久化</li>
+<li>一主两从情况下，主节点下线，2 号从节点马上 slaveof 1 号从节点</li>
+<li>一主两从情况下，主节点下线，2 号从节点马上 slaveof 1 号从节点，此时主节点写两分钟数据，然后 2 号从节点再 slaveof 主节点</li>
+<li>一主两从情况下，主节点下线， 1 号从节点继续写 2 分钟的数据，然后 2 号从节点 slaveof 1 号从节点</li>
+<li>一主两从情况下，主节点执行 ClearReplicateID 下线再上线， 1 号从节点和 2 号从节点 slaveof 主节点</li>
+<li>一主两从情况下，1 号从节点和 2 号从节点 slaveof 主节点的中途对主节点执行 ClearReplicateID</li>
+<li>一主两从情况下，1 号从节点和 2 号从节点 slaveof 主节点执行完毕后对主节点执行 ClearReplicateID，再次 slaveof 主节点</li>
+<li>一主两从情况下，1 号从节点和 2 号从节点 slaveof 主节点执行完毕后对一个从节点执行 ClearReplicateID，再次 slaveof 主节点</li>
+<li>一主两从情况下，1 号从节点和 2 号从节点 slaveof 主节点执行完毕后对一个从节点执行 ClearReplicateID，再次 slaveof 主节点</li>
 </ul>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/08/31/Pika%20ReplicationID%20%E6%96%B9%E6%A1%88/" data-id="clm4qlxsc0004by9kfolqb434" data-title="Pika ReplicationID 方案" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/08/31/Pika%20ReplicationID%20%E6%96%B9%E6%A1%88/" data-id="clmyluc07000a029k6exkca31" data-title="Pika ReplicationID 方案" class="article-share-link">Share</a>
       
       
       
@@ -145,6 +158,15 @@
   
     
 <nav id="article-nav">
+  
+    <a href="/2023/09/25/Pika%E5%8A%A8%E6%80%81%E5%85%B3%E9%97%ADWAL%E6%96%B9%E6%A1%88/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Pika动态关闭WAL方案
+        
+      </div>
+    </a>
   
   
     <a href="/2023/08/30/Codis%20sentinel%20%E5%8D%87%E7%BA%A7%E6%96%B9%E6%A1%88/" id="article-nav-older" class="article-nav-link-wrap">
@@ -188,7 +210,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li></ul>
     </div>
   </div>
 
@@ -199,6 +221,10 @@
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2023/09/25/Pika%E5%8A%A8%E6%80%81%E5%85%B3%E9%97%ADWAL%E6%96%B9%E6%A1%88/">Pika动态关闭WAL方案</a>
+          </li>
         
           <li>
             <a href="/2023/08/31/Pika%20ReplicationID%20%E6%96%B9%E6%A1%88/">Pika ReplicationID 方案</a>
@@ -214,10 +240,6 @@
         
           <li>
             <a href="/2023/08/15/%E9%83%A8%E7%BD%B2Kubernetes%E9%9B%86%E7%BE%A4/">部署Kubernetes集群</a>
-          </li>
-        
-          <li>
-            <a href="/2023/08/06/Pika%E6%94%AF%E6%8C%81Zset%E9%99%90%E9%95%BF%E6%96%B9%E6%A1%88/">Pika支持Zset限长方案</a>
           </li>
         
       </ul>
