@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>Pika命令处理流程源码分析 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="背景我们希望通过阅读 Pika 的源码来熟悉 Pika 接收到一个命令时怎么进行处理的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Pika命令处理流程源码分析">
+<meta property="og:url" content="http://example.com/2023/07/05/Pika%E5%91%BD%E4%BB%A4%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="背景我们希望通过阅读 Pika 的源码来熟悉 Pika 接收到一个命令时怎么进行处理的">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.35.43_64a55594b97e9.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.43.02_64a55749b6333.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.45.01_64a557c262d93.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.49.19_64a558d629e5a.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.51.32_64a5595ae7fd0.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.54.09_64a559e67bdbb.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.55.58_64a55a62853d8.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.57.29_64a55aacefd88.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0520.03.31_64a55c188aee6.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0520.06.50_64a55ceb19b6f.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0520.11.19_64a55dfe81207.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0520.15.14_64a55efad5963.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0520.20.49_64a5602606337.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0520.30.42_64a562a12968b.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0520.39.31_64a56496c940b.png">
+<meta property="og:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0520.41.15_64a565118fc6d.png">
+<meta property="article:published_time" content="2023-07-05T04:47:02.000Z">
+<meta property="article:modified_time" content="2023-08-08T08:41:30.538Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Blog">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.35.43_64a55594b97e9.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-Pika命令处理流程源码分析" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/07/05/Pika%E5%91%BD%E4%BB%A4%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" class="article-date">
+  <time class="dt-published" datetime="2023-07-05T04:47:02.000Z" itemprop="datePublished">2023-07-05</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      Pika命令处理流程源码分析
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>我们希望通过阅读 Pika 的源码来熟悉 Pika 接收到一个命令时怎么进行处理的<span id="more"></span></p>
+<h3 id="Pika执行命令流程"><a href="#Pika执行命令流程" class="headerlink" title="Pika执行命令流程"></a>Pika执行命令流程</h3><h5 id="src-x2F-pika-client-conn-cc"><a href="#src-x2F-pika-client-conn-cc" class="headerlink" title="src&#x2F;pika_client_conn.cc"></a>src&#x2F;pika_client_conn.cc</h5><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.35.43_64a55594b97e9.png" alt="截屏2023-07-05 19.35.43.png"></p>
+<p>Pika 执行命令的流程从 PikaClientConn::Docmd 这个函数开始，这个函数的三个参数 argv 里面存命令的参数，是一个 vector，比如一条 set 命令(examlpe:argv[0] 为 set，argv[1] 为 key，argv[2] 为 value），第二个参数 opt 为命令名称，第三个参数 resp_ptr 是一个指向 string(reply) 的指针，这里的 g_pika_cmd_table_manager-&gt;GetCmd(opt) 函数查询 Cmd 中是否有存在的命令，如果没有则 return，对于返回值不为空的 c_ptr，我们会执行 SetConn 和 SetResp 操作，给 conn_ 和 resp_ptr 初始化.</p>
+<p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.43.02_64a55749b6333.png" alt="截屏2023-07-05 19.43.02.png"></p>
+<p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.45.01_64a557c262d93.png" alt="截屏2023-07-05 19.45.01.png"></p>
+<p>这里的 c_ptr-&gt;Inital 是对命令进行初始化操作，各个命令覆写了 Cmd 的 Initial，以 Get 命令为例，执行 DoInitial一般是对命令传进来的参数数量判断是否合理.接下来的 UpdageQueryNumAndExecCountDB 是对 Qps 等信息进行统计.</p>
+<p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.49.19_64a558d629e5a.png" alt="截屏2023-07-05 19.49.19.png"></p>
+<p>c_ptr-&gt;Executer() 是执行命令的函数，下面我们可以看下这个函数里面的具体逻辑</p>
+<h5 id="src-x2F-pika-command-cc"><a href="#src-x2F-pika-command-cc" class="headerlink" title="src&#x2F;pika_command.cc"></a>src&#x2F;pika_command.cc</h5><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.51.32_64a5595ae7fd0.png" alt="截屏2023-07-05 19.51.32.png"></p>
+<p>在 Execute 函数里面有几层逻辑，我们以 Del 命令举例,我们会走到最后一层逻辑，这里是根据 cmd 名字来走不同的逻辑，接着我们继续看下 ProcessSingleSlotCmd() 这个函数.</p>
+<p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.54.09_64a559e67bdbb.png" alt="截屏2023-07-05 19.54.09.png"></p>
+<p>在 ProcessSingleSlotCmd 里面，通过 GetSlotByDBName和GetSyncMasterSlotByname 获取 slot 和sync_slot，然后执行 ProcessCommand</p>
+<p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.55.58_64a55a62853d8.png" alt="截屏2023-07-05 19.55.58.png"></p>
+<p>我们以 Del 命令为例，会走到 InternalProcessCommand 这层逻辑.</p>
+<p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0519.57.29_64a55aacefd88.png" alt="截屏2023-07-05 19.57.29.png"></p>
+<p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0520.03.31_64a55c188aee6.png" alt="截屏2023-07-05 20.03.31.png"></p>
+<p>在 InternalProcessCommand 里面，通过加锁 record_lock 防止多并发情况下对同一个 key 进行写请求，即单线程安全.程序首先执行 DoCommand,DoCommand 中有个 Do(slot) 函数，每个子命令覆写了 Do 函数，对于写操作的命令，我们会执行 DoBinlog。以下我以 Del 命令为例讲解：</p>
+<h5 id="src-x2F-pika-kv-cc"><a href="#src-x2F-pika-kv-cc" class="headerlink" title="src&#x2F;pika_kv.cc"></a>src&#x2F;pika_kv.cc</h5><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0520.06.50_64a55ceb19b6f.png" alt="截屏2023-07-05 20.06.50.png"></p>
+<p>每个命令都有自己的 Do 方法，这里的是 Del 命令为例的执行情况,我们可以继续往下看看这个 Del 指令的具体执行逻辑</p>
+<p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0520.11.19_64a55dfe81207.png" alt="截屏2023-07-05 20.11.19.png"></p>
+<p>可以看到这里就是存储引擎 Storage(Blackwidow) 的处理流程，对于 del 命令，对 5 种数据结构下的某一个 key进行删除并计数最终返回一个 count.这里我们可以继续对某一个数据结构比如 string 来看具体这个 Del 做了什么操作. 图中的 string_db_ 是 <code>std::unique_ptr&lt;Redisstrings&gt;</code>类型。</p>
+<p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0520.15.14_64a55efad5963.png" alt="截屏2023-07-05 20.15.14.png"></p>
+<p>这里我们可以看到，首先我们会先 Get 一下这个 key 看是否存在，如果存在我们继续执行if里面的逻辑,我们可以继续看下 ParsedStringsValue 这层逻辑</p>
+<p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0520.20.49_64a5602606337.png" alt="截屏2023-07-05 20.20.49.png"></p>
+<p>可以发现这里的 internal_value_str 就是数据库里面要删除的那个 Key 对应的 value，这里是对过期时间进行了设置,我们对 db_-&gt;Delete 继续往下看</p>
+<h5 id="pika-x2F-deps-x2F-include-x2F-rocksdb-x2F-db-h"><a href="#pika-x2F-deps-x2F-include-x2F-rocksdb-x2F-db-h" class="headerlink" title="pika&#x2F;deps&#x2F;include&#x2F;rocksdb&#x2F;db.h"></a>pika&#x2F;deps&#x2F;include&#x2F;rocksdb&#x2F;db.h</h5><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0520.30.42_64a562a12968b.png" alt="截屏2023-07-05 20.30.42.png"></p>
+<p>这里就是调用 RocksDB 层的函数 Delete 了</p>
+<h5 id="src-x2F-pika-command-cc-1"><a href="#src-x2F-pika-command-cc-1" class="headerlink" title="src&#x2F;pika_command.cc"></a>src&#x2F;pika_command.cc</h5><p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0520.39.31_64a56496c940b.png" alt="截屏2023-07-05 20.39.31.png"></p>
+<p>看完命令执行后我们继续看下 DoBinlog 这个函数</p>
+<p><img src="https://beijing.xstore.qihu.com/geelib-base-online/%E6%88%AA%E5%B1%8F2023-07-0520.41.15_64a565118fc6d.png" alt="截屏2023-07-05 20.41.15.png"></p>
+<p>这里会判断是否是写命令，如果是的话，则进行 DoBinlog 操作，可以看到这个 DoBinlog 是父类方法为子类用</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/07/05/Pika%E5%91%BD%E4%BB%A4%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" data-id="clpmeowd9000jhwrf176076rl" data-title="Pika命令处理流程源码分析" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2023/07/06/Pika%E5%91%BD%E4%BB%A4%E8%80%97%E6%97%B6%E7%BB%9F%E8%AE%A1%E5%8A%9F%E8%83%BD%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Pika命令耗时统计功能技术文档
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2023/07/05/Pika%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Pika主从同步方案代码理解</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blog/" style="font-size: 10px;">Blog</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/11/">November 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/11/30/Floyd%E5%A4%9Akey%E5%91%BD%E4%BB%A4%E5%9C%A8%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/">Floyd的多key命令在并发场景下的解决方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/27/Floyd%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%A1%88%E8%A7%A3%E6%9E%90/">Pika的Floyd设计方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/21/Pika%E5%9C%A8K8s%E4%B8%8A%E7%9A%84%E6%89%A9%E5%AE%B9/">Pika在K8s上的扩容</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/30/Pika%E7%9A%84CacheStatus%E6%96%B9%E6%A1%88/">Pika的CacheStatus方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/26/Pika%E7%9A%84Cache%E6%96%B9%E6%A1%88/">Pika的Cache方案</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

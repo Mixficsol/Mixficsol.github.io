@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://example.com/page/2/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:locale" content="en_US">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-Pika支持Zset限长方案" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/08/06/Pika%E6%94%AF%E6%8C%81Zset%E9%99%90%E9%95%BF%E6%96%B9%E6%A1%88/" class="article-date">
+  <time class="dt-published" datetime="2023-08-06T14:25:11.132Z" itemprop="datePublished">2023-08-06</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/08/06/Pika%E6%94%AF%E6%8C%81Zset%E9%99%90%E9%95%BF%E6%96%B9%E6%A1%88/">Pika支持Zset限长方案</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>Pika 中的 Zset 这种数据结构不能限制单个 Zset 存储的最大元素个数
+        
+          <p class="article-more-link">
+            <a href="/2023/08/06/Pika%E6%94%AF%E6%8C%81Zset%E9%99%90%E9%95%BF%E6%96%B9%E6%A1%88/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/08/06/Pika%E6%94%AF%E6%8C%81Zset%E9%99%90%E9%95%BF%E6%96%B9%E6%A1%88/" data-id="clpmeowdb000phwrfht3z8cj6" data-title="Pika支持Zset限长方案" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Pika的Zset范围删除性能优化方案" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/08/06/Pika%E7%9A%84Zset%E8%8C%83%E5%9B%B4%E5%88%A0%E9%99%A4%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%96%B9%E6%A1%88/" class="article-date">
+  <time class="dt-published" datetime="2023-08-06T14:24:28.256Z" itemprop="datePublished">2023-08-06</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/08/06/Pika%E7%9A%84Zset%E8%8C%83%E5%9B%B4%E5%88%A0%E9%99%A4%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%96%B9%E6%A1%88/">Pika的Zset范围删除性能优化方案</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>Pika 的 ZRemrangebyscore 命令的作用如下:
+        
+          <p class="article-more-link">
+            <a href="/2023/08/06/Pika%E7%9A%84Zset%E8%8C%83%E5%9B%B4%E5%88%A0%E9%99%A4%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%96%B9%E6%A1%88/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/08/06/Pika%E7%9A%84Zset%E8%8C%83%E5%9B%B4%E5%88%A0%E9%99%A4%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%96%B9%E6%A1%88/" data-id="clpmeowdd000vhwrf3cfoe39y" data-title="Pika的Zset范围删除性能优化方案" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Pika磁盘容量满恢复方案" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/08/02/Pika%E7%A3%81%E7%9B%98%E5%AE%B9%E9%87%8F%E6%BB%A1%E6%81%A2%E5%A4%8D%E6%96%B9%E6%A1%88/" class="article-date">
+  <time class="dt-published" datetime="2023-08-02T07:46:24.105Z" itemprop="datePublished">2023-08-02</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/08/02/Pika%E7%A3%81%E7%9B%98%E5%AE%B9%E9%87%8F%E6%BB%A1%E6%81%A2%E5%A4%8D%E6%96%B9%E6%A1%88/">Pika磁盘容量满恢复方案</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>Pika 实例硬盘容量满，清理数据后，Pika 仍然保持错误的状态，需要重启才能恢复
+        
+          <p class="article-more-link">
+            <a href="/2023/08/02/Pika%E7%A3%81%E7%9B%98%E5%AE%B9%E9%87%8F%E6%BB%A1%E6%81%A2%E5%A4%8D%E6%96%B9%E6%A1%88/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/08/02/Pika%E7%A3%81%E7%9B%98%E5%AE%B9%E9%87%8F%E6%BB%A1%E6%81%A2%E5%A4%8D%E6%96%B9%E6%A1%88/" data-id="clpmeowdf000zhwrf3rom9i65" data-title="Pika磁盘容量满恢复方案" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-pika_exporter本地启动过程文档" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/07/12/pika_exporter%E6%9C%AC%E5%9C%B0%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%96%87%E6%A1%A3/" class="article-date">
+  <time class="dt-published" datetime="2023-07-12T04:41:08.000Z" itemprop="datePublished">2023-07-12</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/07/12/pika_exporter%E6%9C%AC%E5%9C%B0%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%96%87%E6%A1%A3/">Pika_exporter本地启动文档</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>本地使用 Pika 的 exporter 监控工具
+        
+          <p class="article-more-link">
+            <a href="/2023/07/12/pika_exporter%E6%9C%AC%E5%9C%B0%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%96%87%E6%A1%A3/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/07/12/pika_exporter%E6%9C%AC%E5%9C%B0%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%96%87%E6%A1%A3/" data-id="clpmeowde000xhwrf4k2lc04c" data-title="Pika_exporter本地启动文档" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Blackwidow重构图" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/" class="article-date">
+  <time class="dt-published" datetime="2023-07-10T23:32:18.000Z" itemprop="datePublished">2023-07-11</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/">Blackwidow代码解析</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>我们希望通过阅读 Blackwidow 源码来学习这个存储引擎存储数据的方式
+        
+          <p class="article-more-link">
+            <a href="/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/07/11/Blackwidow%E9%87%8D%E6%9E%84%E5%9B%BE/" data-id="clpmeowct0000hwrfbjngdbsq" data-title="Blackwidow代码解析" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Pika命令耗时统计功能技术文档" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/07/06/Pika%E5%91%BD%E4%BB%A4%E8%80%97%E6%97%B6%E7%BB%9F%E8%AE%A1%E5%8A%9F%E8%83%BD%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/" class="article-date">
+  <time class="dt-published" datetime="2023-07-06T04:40:26.000Z" itemprop="datePublished">2023-07-06</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/07/06/Pika%E5%91%BD%E4%BB%A4%E8%80%97%E6%97%B6%E7%BB%9F%E8%AE%A1%E5%8A%9F%E8%83%BD%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/">Pika命令耗时统计功能技术文档</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>Pika 可以通过慢查询 (Slowlog) 来查询每个命令的执行时间
+        
+          <p class="article-more-link">
+            <a href="/2023/07/06/Pika%E5%91%BD%E4%BB%A4%E8%80%97%E6%97%B6%E7%BB%9F%E8%AE%A1%E5%8A%9F%E8%83%BD%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/07/06/Pika%E5%91%BD%E4%BB%A4%E8%80%97%E6%97%B6%E7%BB%9F%E8%AE%A1%E5%8A%9F%E8%83%BD%E6%8A%80%E6%9C%AF%E6%96%87%E6%A1%A3/" data-id="clpmeowda000lhwrf5fgrfav8" data-title="Pika命令耗时统计功能技术文档" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Pika命令处理流程源码分析" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/07/05/Pika%E5%91%BD%E4%BB%A4%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" class="article-date">
+  <time class="dt-published" datetime="2023-07-05T04:47:02.000Z" itemprop="datePublished">2023-07-05</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/07/05/Pika%E5%91%BD%E4%BB%A4%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">Pika命令处理流程源码分析</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>我们希望通过阅读 Pika 的源码来熟悉 Pika 接收到一个命令时怎么进行处理的
+        
+          <p class="article-more-link">
+            <a href="/2023/07/05/Pika%E5%91%BD%E4%BB%A4%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/07/05/Pika%E5%91%BD%E4%BB%A4%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" data-id="clpmeowd9000jhwrf176076rl" data-title="Pika命令处理流程源码分析" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Pika主从同步方案代码理解" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/07/05/Pika%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/" class="article-date">
+  <time class="dt-published" datetime="2023-07-05T04:46:20.000Z" itemprop="datePublished">2023-07-05</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/07/05/Pika%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/">Pika主从同步方案代码理解</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>﻿从节点收到 Bitop 这样的命令之后，要再次读取后面的 key 对应的内容进行运算
+        
+          <p class="article-more-link">
+            <a href="/2023/07/05/Pika%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/07/05/Pika%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3/" data-id="clpmeowd6000ahwrf3arubum7" data-title="Pika主从同步方案代码理解" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Pika代码理解(二)" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/04/24/Pika%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3(%E4%BA%8C)/" class="article-date">
+  <time class="dt-published" datetime="2023-04-24T10:40:00.358Z" itemprop="datePublished">2023-04-24</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/04/24/Pika%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3(%E4%BA%8C)/">Pika代码理解(二)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>紧接着对 Pika 代码理解(一)的介绍，我在对服务器与客户端的建连这边没弄懂
+        
+          <p class="article-more-link">
+            <a href="/2023/04/24/Pika%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3(%E4%BA%8C)/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/24/Pika%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3(%E4%BA%8C)/" data-id="clpmeowd8000fhwrf03qee9jv" data-title="Pika代码理解(二)" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Pika代码理解(一)" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/04/20/Pika%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3(%E4%B8%80)/" class="article-date">
+  <time class="dt-published" datetime="2023-04-20T10:05:42.492Z" itemprop="datePublished">2023-04-20</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2023/04/20/Pika%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3(%E4%B8%80)/">Pika代码理解(一)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>在 Pika 的 src 下的 pika.cc 中的 main 函数中首先通过函数创造出 PikaServer 实例
+        
+          <p class="article-more-link">
+            <a href="/2023/04/20/Pika%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3(%E4%B8%80)/#more">Read More</a>
+          </p>
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/20/Pika%E4%BB%A3%E7%A0%81%E7%90%86%E8%A7%A3(%E4%B8%80)/" data-id="clpmeowd7000dhwrf343589am" data-title="Pika代码理解(一)" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+
+
+  <nav id="page-nav">
+    
+    <a class="extend prev" rel="prev" href="/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+  </nav>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blog/" style="font-size: 10px;">Blog</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/11/">November 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/11/30/Floyd%E5%A4%9Akey%E5%91%BD%E4%BB%A4%E5%9C%A8%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/">Floyd的多key命令在并发场景下的解决方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/27/Floyd%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%A1%88%E8%A7%A3%E6%9E%90/">Pika的Floyd设计方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/21/Pika%E5%9C%A8K8s%E4%B8%8A%E7%9A%84%E6%89%A9%E5%AE%B9/">Pika在K8s上的扩容</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/30/Pika%E7%9A%84CacheStatus%E6%96%B9%E6%A1%88/">Pika的CacheStatus方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/26/Pika%E7%9A%84Cache%E6%96%B9%E6%A1%88/">Pika的Cache方案</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

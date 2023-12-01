@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>Pika支持Zset限长方案 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="背景Pika 中的 Zset 这种数据结构不能限制单个 Zset 存储的最大元素个数">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Pika支持Zset限长方案">
+<meta property="og:url" content="http://example.com/2023/08/06/Pika%E6%94%AF%E6%8C%81Zset%E9%99%90%E9%95%BF%E6%96%B9%E6%A1%88/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="背景Pika 中的 Zset 这种数据结构不能限制单个 Zset 存储的最大元素个数">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/e940fdda-fc7c-4398-bb9c-50a65a87ecba">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/f5841d35-aaa9-412f-89f6-698fda69115c">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/6d4a2115-b7f7-498b-9285-3095210bfc0e">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/348af221-40e7-4a24-aace-4a6f2525fbff">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/15a2fd9c-77ee-46b8-8846-21f24d6dc645">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/b7983f14-cbfb-41ef-a6e7-21c9f15e011e">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/f5e73248-2fc4-4fb1-9b6a-13e76200a8fd">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/25a09a53-49d8-4984-86b7-3c5ccd7381de">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/21302d67-cb85-47ce-ac60-af1008aa1775">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/c2a3b5ac-1749-4b1c-be24-228491af4937">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/b8fc4742-fd77-4ef8-9575-37a7cf1d9b78">
+<meta property="article:published_time" content="2023-08-06T14:25:11.132Z">
+<meta property="article:modified_time" content="2023-08-08T07:51:50.948Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Blog">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/e940fdda-fc7c-4398-bb9c-50a65a87ecba">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-Pika支持Zset限长方案" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/08/06/Pika%E6%94%AF%E6%8C%81Zset%E9%99%90%E9%95%BF%E6%96%B9%E6%A1%88/" class="article-date">
+  <time class="dt-published" datetime="2023-08-06T14:25:11.132Z" itemprop="datePublished">2023-08-06</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      Pika支持Zset限长方案
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>Pika 中的 Zset 这种数据结构不能限制单个 Zset 存储的最大元素个数<span id="more"></span>，导致一个 Zset 里面可以存无限制的 field，我们希望 Pika 支持设置 Zset 存储的最大元素个数，当超过用户设置的最大元素个数时，可以自动清理 Zset 中不需要的数据，非常适合只保存定量历史数据的业务场景.</p>
+<p>主要特性：</p>
+<ul>
+<li>支持设置 Zset 保存的最大元素个数</li>
+<li>支持头部和尾部删除策略</li>
+<li>支持动态设置执行删除任务周期，错峰删除，避免影响线上业务</li>
+<li>支持手动执行删除任务</li>
+</ul>
+<h2 id="设计方案"><a href="#设计方案" class="headerlink" title="设计方案"></a>设计方案</h2><p>我们希望从两个方面入手，第一部分是靠 Pika 内部自动定期清理 Zset 中，这里的定期包括规定时间（比如每隔一小时）和规定时段 （比如每天两点到四点）以下是 Pika.conf 中新增的变量. 这里的 zset-auto-del-interval 和 zset-auto-del-cron 就是我上面说的那两个定期方式. 这种定期删除的方法，我们以一个线程的方式放在 Pika 的DoTimingTask 里面，即每隔 5 秒系统会检查一下，到了规定时间即进行删除操作. 另一种方式则是以命令的方式进行删除，我们新增了两个命令 zsetautodel 和 zsetautodeloff 这两个命令，第一个命令是执行手动删除，执行时我们传入两个参数 cursor(游标) 和 speed-factor(睡眠时间) ，然后进行删除操作，zsetautodeloff 这个命令即是停止此时的手动删除操作(自动删除不能停止). 接下来我们来讲一下怎么进行具体的删除操作.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">########################</span></span><br><span class="line"><span class="comment">## Zset auto del setting</span></span><br><span class="line"><span class="comment">########################</span></span><br><span class="line"><span class="comment"># when the number of zset is more than the threshold, auto delete members.  0 means disable auto delete.</span></span><br><span class="line">zset-auto-del-threshold : 100</span><br><span class="line"><span class="comment"># delete direction, 0 means delete from head, -1 means delete from tail.</span></span><br><span class="line">zset-auto-del-direction : 0</span><br><span class="line"><span class="comment"># the number of deleted member</span></span><br><span class="line">zset-auto-del-num : 1</span><br><span class="line"><span class="comment"># auto delete cron task, forhat: start-end, like 02-04, pika will check to schedule auto delete zset between 2 to 4 o&#x27;clock everyday</span></span><br><span class="line">zset-auto-del-cron :</span><br><span class="line"><span class="comment"># auto delete interval, format: interval, like 6, pika will check to schedule auto delete zset every 6 hours.</span></span><br><span class="line">zset-auto-del-interval : 1</span><br><span class="line"><span class="comment"># when delete a key members success, will sleep for a moment.  sleep time = delete time * speed factor.  you can set like 0.1 [0,1000]</span></span><br><span class="line">zset-auto-del-cron-speed-factor : 0.1</span><br><span class="line"><span class="comment"># scan the number of keys from zset db at a time.</span></span><br><span class="line">zset-auto-del-scan-round-num : 10000</span><br><span class="line"><span class="comment"># the ratio of how mutch deleted zset keys can trigger compact zset db, [0,1]</span></span><br><span class="line">zset-compact-del-ratio : 1</span><br><span class="line"><span class="comment"># how mutch deleted zset keys num that can trigger compact zset db</span></span><br><span class="line">zset-compact-del-num : 100000000</span><br></pre></td></tr></table></figure>
+
+<h3 id="删除流程"><a href="#删除流程" class="headerlink" title="删除流程"></a>删除流程</h3><p>我们首先以手动删除命令 zsetautodel 开始讲，执行该命令时需要传入两个参数 cursor(游标) 和 speed-factor(睡眠时间)</p>
+<img width="713" alt="截屏2023-08-08 15 13 39" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/e940fdda-fc7c-4398-bb9c-50a65a87ecba">
+
+<img width="825" alt="截屏2023-08-08 15 14 39" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/f5841d35-aaa9-412f-89f6-698fda69115c">
+
+
+<p>这里我们看下 RequestManualTask 这个函数，这里我设计了一个结构体 ZsetTaskItem 用来存三个参数，一个是task_type，一个是 cursor，speed_factor，然后执行 DoZsetAutoDelTask 这个函数。</p>
+<img width="790" alt="截屏2023-08-08 15 40 36" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/6d4a2115-b7f7-498b-9285-3095210bfc0e">
+
+
+<p>这里有个 switch 语句来判断执行哪一段逻辑，如果是手动删除，则是 ZSET_MANUAL_TASK，自动删除的话则是 ZSET_CRON_TASK，</p>
+<img width="789" alt="截屏2023-08-08 15 40 49" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/348af221-40e7-4a24-aace-4a6f2525fbff">
+
+
+<p>由于我们可能一次清理不能删除掉所有的 Zset 的 field，所以这里设置了一个 while 循环，这里的 stop_manual_task_ 就是跳出循环的条件，这个和另外的那个命令有联系，如果你执行 zsetautodeloff 命令的话，这里的 stop_manual_task 就会被设置成 true，从而跳出循环，结束清理。<br><img width="783" alt="截屏2023-08-08 15 41 07" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/15a2fd9c-77ee-46b8-8846-21f24d6dc645"></p>
+<p>删除部分主要是执行函数是这个 BatchTrimZsetKeys 我们可以看到先获取游标，然后遍历所有的 key，用 Zcard 先获取对应的 key 中需不需要进行删除，如果需要则使用 ZRemrangebyrank 命令进行删除，这里支持头部和尾部删除，在配置文件中的 zset-auto-del-direction 如果设置为 0 则是头部删除，为 1 则是尾部删除.<br><img width="795" alt="截屏2023-08-08 15 41 42" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/b7983f14-cbfb-41ef-a6e7-21c9f15e011e"><br><img width="776" alt="截屏2023-08-08 15 42 00" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/f5e73248-2fc4-4fb1-9b6a-13e76200a8fd"></p>
+<p>接下来我们看下自动删除的流程（和手动删除流程差不多)，首先是 DoAutoDelZsetMember 这个函数没隔 5 秒执行一次，然后符合删除条件的话调用 RequestCronTask() 函数进行删除，下面的逻辑就和手动删除是类似的了</p>
+<img width="410" alt="截屏2023-08-08 15 27 57" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/25a09a53-49d8-4984-86b7-3c5ccd7381de">
+
+<img width="1003" alt="截屏2023-08-08 15 28 42" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/21302d67-cb85-47ce-ac60-af1008aa1775">
+
+
+<h2 id="实践效果"><a href="#实践效果" class="headerlink" title="实践效果"></a>实践效果</h2><p>我们先用压测工具往一个 Zset 里面加 597 个 field，然后执行  ZsetAutoDel 0 0.1 进行删除，可以看到此时的 Zset 里面的 field 已经被删掉成 99 个了。</p>
+<img width="743" alt="截屏2023-08-08 15 32 20" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/c2a3b5ac-1749-4b1c-be24-228491af4937">
+
+<img width="360" alt="截屏2023-08-08 15 33 38" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/b8fc4742-fd77-4ef8-9575-37a7cf1d9b78">
+
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>功能上已经进行了实现，但是有些地方还是没写仔细，比如删 Zset 的同时写 Binlog 的流程还没有走通，以及进行删除时对每个 key 进行上锁操作，保证数据一致性。同时关于 Zset 的限长个数，我们是在配置文件中写死的，我们不能动态更改 Zset 的限制长度。考虑后期加命令去实现这部分配置文件中数据的更改。</p>
+<p>相关 PR: <a target="_blank" rel="noopener" href="https://github.com/OpenAtomFoundation/pika/pull/1846">#1846</a></p>
+<p>相关 Issue: <a target="_blank" rel="noopener" href="https://github.com/OpenAtomFoundation/pika/issues/1720">#1720</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/08/06/Pika%E6%94%AF%E6%8C%81Zset%E9%99%90%E9%95%BF%E6%96%B9%E6%A1%88/" data-id="clpmeowdb000phwrfht3z8cj6" data-title="Pika支持Zset限长方案" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2023/08/15/%E9%83%A8%E7%BD%B2Kubernetes%E9%9B%86%E7%BE%A4/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          部署Kubernetes集群
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2023/08/06/Pika%E7%9A%84Zset%E8%8C%83%E5%9B%B4%E5%88%A0%E9%99%A4%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%96%B9%E6%A1%88/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Pika的Zset范围删除性能优化方案</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blog/" style="font-size: 10px;">Blog</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/11/">November 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/11/30/Floyd%E5%A4%9Akey%E5%91%BD%E4%BB%A4%E5%9C%A8%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/">Floyd的多key命令在并发场景下的解决方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/27/Floyd%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%A1%88%E8%A7%A3%E6%9E%90/">Pika的Floyd设计方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/21/Pika%E5%9C%A8K8s%E4%B8%8A%E7%9A%84%E6%89%A9%E5%AE%B9/">Pika在K8s上的扩容</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/30/Pika%E7%9A%84CacheStatus%E6%96%B9%E6%A1%88/">Pika的CacheStatus方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/26/Pika%E7%9A%84Cache%E6%96%B9%E6%A1%88/">Pika的Cache方案</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
