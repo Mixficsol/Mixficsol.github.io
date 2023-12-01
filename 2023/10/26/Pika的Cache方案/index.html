@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>Pika的Cache方案 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="背景以 Pika 的单机模式走通了 String 类型下的 set&#x2F;get 命令">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Pika的Cache方案">
+<meta property="og:url" content="http://example.com/2023/10/26/Pika%E7%9A%84Cache%E6%96%B9%E6%A1%88/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="背景以 Pika 的单机模式走通了 String 类型下的 set&#x2F;get 命令">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-10-26T08:46:03.891Z">
+<meta property="article:modified_time" content="2023-12-01T06:00:32.791Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Blog">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-Pika的Cache方案" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/10/26/Pika%E7%9A%84Cache%E6%96%B9%E6%A1%88/" class="article-date">
+  <time class="dt-published" datetime="2023-10-26T08:46:03.891Z" itemprop="datePublished">2023-10-26</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      Pika的Cache方案
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>以 Pika 的单机模式走通了 String 类型下的 set&#x2F;get 命令<span id="more"></span></p>
+<h1 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h1><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">Cmd::DoCommand</span><span class="params">(<span class="type">const</span> std::shared_ptr&lt;Slot&gt;&amp; slot, <span class="type">const</span> HintKeys&amp; hint_keys)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (!<span class="built_in">is_suspend</span>()) &#123;</span><br><span class="line">    slot-&gt;<span class="built_in">DbRWLockReader</span>();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">need_cache_do</span>() <span class="comment">// 判断该命令需要操作缓存</span></span><br><span class="line">      &amp;&amp; PIKA_CACHE_NONE != g_pika_conf-&gt;<span class="built_in">cache_model</span>()) &#123; <span class="comment">// 判断缓存模式不为NONE</span></span><br><span class="line">      &amp;&amp; PIKA_CACHE_STATUS_OK == g_pika_server-&gt;<span class="built_in">Cache</span>()-&gt;<span class="built_in">CacheStatus</span>()) &#123; <span class="comment">// 判断缓存状态为OK</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">is_need_read_cache</span>()) &#123; <span class="comment">// 如果是读命令，执行读缓存</span></span><br><span class="line">      <span class="built_in">PreDo</span>(slot); <span class="comment">// 读缓存</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">is_read</span>() &amp;&amp; <span class="built_in">res</span>().<span class="built_in">CacheMiss</span>()) &#123; <span class="comment">// 如果是读命令，并且缓存未命中，执行读DB</span></span><br><span class="line">      <span class="built_in">DoFromCache</span>(slot); <span class="comment">// 读RocksDB操作</span></span><br><span class="line">      <span class="keyword">if</span> (<span class="built_in">CmdStatus</span>().<span class="built_in">ok</span>() &amp;&amp; <span class="built_in">is_need_update_cache</span>()) &#123; <span class="comment">// 如果读RocksDB成功并且是需要更新缓存</span></span><br><span class="line">        <span class="built_in">DoUpdateCache</span>(slot); <span class="comment">// 更新缓存</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">is_write</span>()) &#123; <span class="comment">// 如果是写命令</span></span><br><span class="line">      <span class="built_in">DoFromCache</span>(slot); <span class="comment">// 写RocksDB</span></span><br><span class="line">      <span class="keyword">if</span> (<span class="built_in">CmdStatus</span>().<span class="built_in">ok</span>() &amp;&amp; <span class="built_in">is_need_update_cache</span>()) &#123; <span class="comment">// 如果写RocksDB成功并且需要更新缓存</span></span><br><span class="line">        <span class="built_in">DoUpdateCache</span>(slot); <span class="comment">// 更新缓存</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="built_in">Do</span>(slot); <span class="comment">// 普通的Do流程</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (!<span class="built_in">is_suspend</span>()) &#123;</span><br><span class="line">    slot-&gt;<span class="built_in">DbRWUnLock</span>();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="以-Set-命令为例子，我们看下它的几种命令操作"><a href="#以-Set-命令为例子，我们看下它的几种命令操作" class="headerlink" title="以 Set 命令为例子，我们看下它的几种命令操作"></a>以 Set 命令为例子，我们看下它的几种命令操作</h5><p><code>DoFromCache</code>:  写 RocksDB，调用 Do 接口</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">SetCmd::DoFromCache</span><span class="params">(std::shared_ptr&lt;Slot&gt; slot)</span> </span>&#123;</span><br><span class="line">  <span class="built_in">Do</span>(slot);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>UpdateCache</code>：更新缓存</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">SetCmd::DoUpdateCache</span><span class="params">(std::shared_ptr&lt;Slot&gt; slot)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">switch</span> (condition_) &#123;</span><br><span class="line">    <span class="keyword">case</span> SetCmd::kXX:</span><br><span class="line">      slot-&gt;<span class="built_in">cache</span>()-&gt;<span class="built_in">Setxx</span>(key_, value_, sec_);</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> SetCmd::kNX:</span><br><span class="line">      slot-&gt;<span class="built_in">cache</span>()-&gt;<span class="built_in">Setnx</span>(key_, value_, sec_);</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> SetCmd::kVX:</span><br><span class="line">      slot-&gt;<span class="built_in">cache</span>()-&gt;<span class="built_in">Setvx</span>(key_, target_, value_, sec_);</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> SetCmd::kEXORPX:</span><br><span class="line">      slot-&gt;<span class="built_in">cache</span>()-&gt;<span class="built_in">Setex</span>(key_, value_, <span class="built_in">static_cast</span>&lt;<span class="type">int32_t</span>&gt;(sec_));</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">      slot-&gt;<span class="built_in">cache</span>()-&gt;<span class="built_in">SetWithoutTTL</span>(key_, value_);</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>PreDo</code>：由于 Set 是写操作，所以没有 <code>PreDo</code>读缓存命令</p>
+<h5 id="以-Get-命令为例子，我们看下它的几种命令操作"><a href="#以-Get-命令为例子，我们看下它的几种命令操作" class="headerlink" title="以 Get 命令为例子，我们看下它的几种命令操作"></a>以 Get 命令为例子，我们看下它的几种命令操作</h5><p><code>DoFromCache</code>: 写 RocksDB，调用 Do 接口</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">GetCmd::DoFromCache</span><span class="params">(std::shared_ptr&lt;Slot&gt; slot)</span> </span>&#123;</span><br><span class="line">  res_.<span class="built_in">clear</span>();</span><br><span class="line">  s_ = slot-&gt;<span class="built_in">db</span>()-&gt;<span class="built_in">GetWithTTL</span>(key_, &amp;value_,&amp;sec_);</span><br><span class="line">  <span class="keyword">if</span> (s_.<span class="built_in">ok</span>()) &#123;</span><br><span class="line">    res_.<span class="built_in">AppendStringLenUint64</span>(value_.<span class="built_in">size</span>());</span><br><span class="line">    res_.<span class="built_in">AppendContent</span>(value_);</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (s_.<span class="built_in">IsNotFound</span>()) &#123;</span><br><span class="line">    res_.<span class="built_in">AppendStringLen</span>(<span class="number">-1</span>);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    res_.<span class="built_in">SetRes</span>(CmdRes::kErrOther, s_.<span class="built_in">ToString</span>());</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>UpdateCache</code>：更新缓存</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">GetCmd::DoUpdateCache</span><span class="params">(std::shared_ptr&lt;Slot&gt; slot)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (s_.<span class="built_in">ok</span>()) &#123; <span class="comment">// 如果写RocksDB成功执行更新缓存</span></span><br><span class="line">    slot-&gt;<span class="built_in">cache</span>()-&gt;<span class="built_in">Set</span>(key_, value_, sec_);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>PreDo</code>: 读缓存操作</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">GetCmd::PreDo</span><span class="params">(std::shared_ptr&lt;Slot&gt; slot)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">auto</span> s = slot-&gt;<span class="built_in">cache</span>()-&gt;<span class="built_in">Get</span>(key_, &amp;value_);</span><br><span class="line">  <span class="keyword">if</span> (s.<span class="built_in">ok</span>()) &#123;</span><br><span class="line">    res_.<span class="built_in">AppendStringLen</span>(value_.<span class="built_in">size</span>());</span><br><span class="line">    res_.<span class="built_in">AppendContent</span>(value_);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    res_.<span class="built_in">SetRes</span>(CmdRes::kCacheMiss);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>一共有 4 种执行命令：</p>
+<p><code>Do</code>: Pika 原生的执行命令方法</p>
+<p><code>PreDo</code>：读缓存操作</p>
+<p><code>UpdateCache</code>: 更新缓存操作</p>
+<p><code>DoFromCache</code> : 写命令下默认调用的就是 <code>Do</code> 接口，读命令下会先调用 <code>res_.clear()</code>清空之前 <code>PreDo</code>的 <code>res_</code>结果，然后调用 <code>Do</code></p>
+<p>写命令：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">SetCmd::CacheDo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	<span class="built_in">Do</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>读命令：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">ExistsCmd::CacheDo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	res_.<span class="built_in">clear</span>();</span><br><span class="line">	<span class="built_in">Do</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>对于 <code>DoFromCache</code>命令，我们也发现了有一些读命令不单单是调用的 <code>Do</code>接口，而是选择了直接重写</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">StrlenCmd::Do</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	<span class="type">int32_t</span> len = <span class="number">0</span>;</span><br><span class="line">	s_ = g_pika_server-&gt;<span class="built_in">db</span>()-&gt;<span class="built_in">Strlen</span>(key_, &amp;len);</span><br><span class="line">	<span class="keyword">if</span> (s_.<span class="built_in">ok</span>() || s_.<span class="built_in">IsNotFound</span>()) &#123;</span><br><span class="line">		res_.<span class="built_in">AppendInteger</span>(len);</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		res_.<span class="built_in">SetRes</span>(CmdRes::kErrOther, s_.<span class="built_in">ToString</span>());</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">StrlenCmd::CacheDo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	res_.<span class="built_in">clear</span>();</span><br><span class="line">	s_ = g_pika_server-&gt;<span class="built_in">db</span>()-&gt;<span class="built_in">GetWithTTL</span>(key_, &amp;value_, &amp;sec_);</span><br><span class="line">	<span class="keyword">if</span> (s_.<span class="built_in">ok</span>() || s_.<span class="built_in">IsNotFound</span>()) &#123;</span><br><span class="line">		res_.<span class="built_in">AppendInteger</span>(value_.<span class="built_in">size</span>());</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		res_.<span class="built_in">SetRes</span>(CmdRes::kErrOther, s_.<span class="built_in">ToString</span>());</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>比如这里的 <code>strlen</code>命令，原生的 <code>Do</code> 命令是直接调 <code>strlen</code>接口，其实底层还是调 <code>Get</code> 接口先获取到 Key 然后计算 Key 的 size, 而 <code>CacheDo</code> 这边的话直接就是调用的 <code>Get</code>接口了，然后计算出 value 的 size</p>
+<h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><ol>
+<li>下面注释的代码中： 这里是否需要对key进行加锁，保证操作 rocksdb 和 cache 是原子的</li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">Cmd::DoCommand</span><span class="params">(<span class="type">const</span> std::shared_ptr&lt;Slot&gt;&amp; slot, <span class="type">const</span> HintKeys&amp; hint_keys)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (!<span class="built_in">is_suspend</span>()) &#123;</span><br><span class="line">    slot-&gt;<span class="built_in">DbRWLockReader</span>();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">need_cache_do</span>()</span><br><span class="line">      &amp;&amp; PIKA_CACHE_NONE != g_pika_conf-&gt;<span class="built_in">cache_model</span>()) &#123;</span><br><span class="line">      &amp;&amp; PIKA_CACHE_STATUS_OK == g_pika_server-&gt;<span class="built_in">Cache</span>()-&gt;<span class="built_in">CacheStatus</span>()) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">is_need_read_cache</span>()) &#123;</span><br><span class="line">      <span class="built_in">PreDo</span>(slot);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">is_read</span>() &amp;&amp; <span class="built_in">res</span>().<span class="built_in">CacheMiss</span>()) &#123;</span><br><span class="line">      <span class="comment">// slash::ScopeRecordLock l(g_pika_server-&gt;LockMgr(), argv[1]); </span></span><br><span class="line">      <span class="built_in">DoFromCache</span>(slot);</span><br><span class="line">      <span class="keyword">if</span> (<span class="built_in">CmdStatus</span>().<span class="built_in">ok</span>() &amp;&amp; <span class="built_in">is_need_update_cache</span>()) &#123;</span><br><span class="line">        <span class="built_in">DoUpdateCache</span>(slot);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">is_write</span>()) &#123;</span><br><span class="line">      <span class="built_in">DoFromCache</span>(slot);</span><br><span class="line">      <span class="keyword">if</span> (<span class="built_in">CmdStatus</span>().<span class="built_in">ok</span>() &amp;&amp; <span class="built_in">is_need_update_cache</span>()) &#123;</span><br><span class="line">        <span class="built_in">DoUpdateCache</span>(slot);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="built_in">Do</span>(slot);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (!<span class="built_in">is_suspend</span>()) &#123;</span><br><span class="line">    slot-&gt;<span class="built_in">DbRWUnLock</span>();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li><p>既然 <code>CacheDo</code>调用的接口的就是 <code>Do</code> ,只是部分场景下会需要把 <code>res_</code>清空，那么我们可不可以直接在每个 <code>Do</code> 接口执行之前调用 <code>res_.clear</code> 这样就不需要再去给每个命令写 <code>CacheDo</code>方法了</p>
+</li>
+<li><p>代码中有逻辑冗余的地方</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">Cmd::DoCommand</span><span class="params">(<span class="type">const</span> std::shared_ptr&lt;Slot&gt;&amp; slot, <span class="type">const</span> HintKeys&amp; hint_keys)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (!<span class="built_in">is_suspend</span>()) &#123;</span><br><span class="line">    slot-&gt;<span class="built_in">DbRWLockReader</span>();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">need_cache_do</span>()</span><br><span class="line">      &amp;&amp; PIKA_CACHE_NONE != g_pika_conf-&gt;<span class="built_in">cache_model</span>()) &#123;</span><br><span class="line">      &amp;&amp; PIKA_CACHE_STATUS_OK == g_pika_server-&gt;<span class="built_in">Cache</span>()-&gt;<span class="built_in">CacheStatus</span>()) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">is_need_read_cache</span>()) &#123;</span><br><span class="line">      <span class="built_in">PreDo</span>(slot);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">is_read</span>() &amp;&amp; <span class="built_in">res</span>().<span class="built_in">CacheMiss</span>()) &#123;</span><br><span class="line">      <span class="built_in">DoFromCache</span>(slot);</span><br><span class="line">      <span class="keyword">if</span> (<span class="built_in">CmdStatus</span>().<span class="built_in">ok</span>() &amp;&amp; <span class="built_in">is_need_update_cache</span>()) &#123; <span class="comment">// 这里的CmdStatus().ok() 返回是s_的值，代表写DB是否成功</span></span><br><span class="line">        <span class="built_in">DoUpdateCache</span>(slot);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">is_write</span>()) &#123;</span><br><span class="line">      <span class="built_in">DoFromCache</span>(slot);</span><br><span class="line">      <span class="keyword">if</span> (<span class="built_in">CmdStatus</span>().<span class="built_in">ok</span>() &amp;&amp; <span class="built_in">is_need_update_cache</span>()) &#123;</span><br><span class="line">        <span class="built_in">DoUpdateCache</span>(slot);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="built_in">Do</span>(slot);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (!<span class="built_in">is_suspend</span>()) &#123;</span><br><span class="line">    slot-&gt;<span class="built_in">DbRWUnLock</span>();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">GetCmd::DoUpdateCache</span><span class="params">(std::shared_ptr&lt;Slot&gt; slot)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (s_.<span class="built_in">ok</span>()) &#123; <span class="comment">// 这里又重新判断了一次s_的返回值</span></span><br><span class="line">    slot-&gt;<span class="built_in">cache</span>()-&gt;<span class="built_in">Set</span>(key_, value_, sec_);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​</p>
+</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/10/26/Pika%E7%9A%84Cache%E6%96%B9%E6%A1%88/" data-id="clpme7vzn000rnqrf8og10sak" data-title="Pika的Cache方案" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2023/10/30/Pika%E7%9A%84CacheStatus%E6%96%B9%E6%A1%88/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Pika的CacheStatus方案
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2023/09/25/Pika%E5%8A%A8%E6%80%81%E5%85%B3%E9%97%ADWAL%E6%96%B9%E6%A1%88/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Pika动态关闭WAL方案</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blog/" style="font-size: 10px;">Blog</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/11/">November 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/11/30/Floyd%E5%A4%9Akey%E5%91%BD%E4%BB%A4%E5%9C%A8%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/">Floyd的多key命令在并发场景下的解决方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/27/Floyd%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%A1%88%E8%A7%A3%E6%9E%90/">Pika的Floyd设计方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/21/Pika%E5%9C%A8K8s%E4%B8%8A%E7%9A%84%E6%89%A9%E5%AE%B9/">Pika在K8s上的扩容</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/30/Pika%E7%9A%84CacheStatus%E6%96%B9%E6%A1%88/">Pika的CacheStatus方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/26/Pika%E7%9A%84Cache%E6%96%B9%E6%A1%88/">Pika的Cache方案</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

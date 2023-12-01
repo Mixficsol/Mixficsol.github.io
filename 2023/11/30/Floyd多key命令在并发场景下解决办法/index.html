@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>Floyd的多key命令在并发场景下的解决方案 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="背景在新存储引擎 floyd 下对于操作多个 key 的命令和以前的处理方式有所不同">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Floyd的多key命令在并发场景下的解决方案">
+<meta property="og:url" content="http://example.com/2023/11/30/Floyd%E5%A4%9Akey%E5%91%BD%E4%BB%A4%E5%9C%A8%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="背景在新存储引擎 floyd 下对于操作多个 key 的命令和以前的处理方式有所不同">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-11-30T02:52:55.644Z">
+<meta property="article:modified_time" content="2023-12-01T06:03:51.838Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Blog">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-Floyd多key命令在并发场景下解决办法" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/11/30/Floyd%E5%A4%9Akey%E5%91%BD%E4%BB%A4%E5%9C%A8%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/" class="article-date">
+  <time class="dt-published" datetime="2023-11-30T02:52:55.644Z" itemprop="datePublished">2023-11-30</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      Floyd的多key命令在并发场景下的解决方案
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>在新存储引擎 floyd 下对于操作多个 key 的命令和以前的处理方式有所不同<span id="more"></span>，例如 <code>msetnx</code>，<code>inster</code>，<code>sinterstore</code>，<code>sunion</code>，<code>sunionstore</code>，<code>zinterstore</code>，<code>zuionstore</code>等命令需要对多个 key 处理，在旧版 blackwidow 中由于 RocksDB 按照数据类型分类，所以同一类型的数据都在同一个 RocksDB 中，此时只需要对当前的 RocksDB 打一个快照即可解决并发问题，新版本中的 RocksDB 按照 key 的 Hash 计算分配给各个 key，所以同一个数据类型的 key 可能会分配在不同的 RocksDB 中，在并发情况下确保数据的正确性显得尤为重要.</p>
+<h1 id="讨论"><a href="#讨论" class="headerlink" title="讨论"></a>讨论</h1><p>我们以 <code>sinter</code>命令举例，来看看在新旧两个存储引擎下目前的实现方法，可以看到在 <code>blackwidow</code>下直接调用 <code>RedisSets::SInter</code>接口，不用担心并发的问题，因为在里面对这个 set 类型的整个 RocksDB 实例打了快照，而在 <code>floyd</code>下我们把一个 <code>SInter</code> 命令拆成了 <code>SMembers</code>和 <code>SIsmember</code>两个方法组成，并且执行这两个方法的 RocksDB 实例大概率不会是同一个，所以快照的生成会有先后顺序，如果在调用 <code>Smembers</code>接口的同时，有对  <code>SIsmember</code>的 key 的写操作，那么就不能保证数据的一致性。</p>
+<p><strong>blackwidow</strong></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">rocksdb::Status <span class="title">RedisSets::SInter</span><span class="params">(<span class="type">const</span> std::vector&lt;std::string&gt;&amp; keys, std::vector&lt;std::string&gt;* members)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (keys.<span class="built_in">empty</span>()) &#123;</span><br><span class="line">    <span class="keyword">return</span> rocksdb::Status::<span class="built_in">Corruption</span>(<span class="string">&quot;SInter invalid parameter, no keys&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  rocksdb::ReadOptions read_options; </span><br><span class="line">  <span class="type">const</span> rocksdb::Snapshot* snapshot;</span><br><span class="line"></span><br><span class="line">  std::string meta_value;</span><br><span class="line">  <span class="type">int32_t</span> version = <span class="number">0</span>;</span><br><span class="line">  <span class="function">ScopeSnapshot <span class="title">ss</span><span class="params">(db_, &amp;snapshot)</span></span>;</span><br><span class="line">  read_options.snapshot = snapshot; <span class="comment">// 生成快照</span></span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">return</span> rocksdb::Status::<span class="built_in">OK</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>floyd</strong></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Status <span class="title">Storage::SInter</span><span class="params">(<span class="type">const</span> std::vector&lt;std::string&gt;&amp; keys, std::vector&lt;std::string&gt;* members)</span> </span>&#123;</span><br><span class="line">  Status s = Status::<span class="built_in">OK</span>();</span><br><span class="line">  <span class="comment">// in codis mode, users should garentee keys will be hashed to same slot</span></span><br><span class="line">  <span class="keyword">auto</span> inst = <span class="built_in">GetDBInstance</span>(keys[<span class="number">0</span>]);</span><br><span class="line">  <span class="keyword">if</span> (!g_pika_conf-&gt;<span class="built_in">classic_mode</span>()) &#123;</span><br><span class="line">    s = inst-&gt;<span class="built_in">SInter</span>(keys, members); <span class="comment">// 生成快照</span></span><br><span class="line">    <span class="keyword">return</span> s;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  std::vector&lt;std::string&gt; key0_members = &#123;&#125;;</span><br><span class="line">  s = inst-&gt;<span class="built_in">SMembers</span>(keys[<span class="number">0</span>], &amp;key0_members);</span><br><span class="line">  <span class="keyword">if</span> (!s.<span class="built_in">ok</span>()) &#123;</span><br><span class="line">    <span class="keyword">return</span> s;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="type">int32_t</span> exist = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">const</span> <span class="keyword">auto</span> member : key0_members) &#123;</span><br><span class="line">    exist = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">size_t</span> idx = <span class="number">1</span>; idx &lt; keys.<span class="built_in">size</span>(); idx++) &#123;</span><br><span class="line">      inst = <span class="built_in">GetDBInstance</span>(keys[idx]);</span><br><span class="line">      s = inst-&gt;<span class="built_in">SIsmember</span>(keys[idx], member, &amp;exist); <span class="comment">// 生成快照</span></span><br><span class="line">      <span class="keyword">if</span> (!s.<span class="built_in">ok</span>()) &#123;</span><br><span class="line">        <span class="keyword">return</span> s;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    members-&gt;<span class="built_in">emplace_back</span>(member);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> Status::<span class="built_in">OK</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="方案"><a href="#方案" class="headerlink" title="方案"></a>方案</h1><p>在收到 <code>sinter</code>这种读请求时，给 <code>Instance</code>容器上一把大锁 (即给所有的 RocksDB 实例上锁)，然后全局打快照，但是这种方法可能会导致后面的命令阻塞，经过讨论我们决定拆开进行打快照，对于 <code>sinster</code>命令，我们分别在 <code>SMembers</code>和 <code>SIsmember</code>上分别打快照，在收到 <code>sinterstore</code>这种写请求时，我们依然用上面的方法，然后再对有写操作的 <code>key</code> 进行上锁。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/11/30/Floyd%E5%A4%9Akey%E5%91%BD%E4%BB%A4%E5%9C%A8%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/" data-id="clpme7vzd0003nqrf1whzefxz" data-title="Floyd的多key命令在并发场景下的解决方案" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2023/11/27/Floyd%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%A1%88%E8%A7%A3%E6%9E%90/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Pika的Floyd设计方案</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blog/" style="font-size: 10px;">Blog</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/11/">November 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/11/30/Floyd%E5%A4%9Akey%E5%91%BD%E4%BB%A4%E5%9C%A8%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/">Floyd的多key命令在并发场景下的解决方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/27/Floyd%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%A1%88%E8%A7%A3%E6%9E%90/">Pika的Floyd设计方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/21/Pika%E5%9C%A8K8s%E4%B8%8A%E7%9A%84%E6%89%A9%E5%AE%B9/">Pika在K8s上的扩容</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/30/Pika%E7%9A%84CacheStatus%E6%96%B9%E6%A1%88/">Pika的CacheStatus方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/26/Pika%E7%9A%84Cache%E6%96%B9%E6%A1%88/">Pika的Cache方案</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

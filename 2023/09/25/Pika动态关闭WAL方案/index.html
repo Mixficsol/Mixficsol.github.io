@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>Pika动态关闭WAL方案 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="背景RocksDB 中的 disableWAL 是禁用 Write-Ahead Logging（WAL）的选项">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Pika动态关闭WAL方案">
+<meta property="og:url" content="http://example.com/2023/09/25/Pika%E5%8A%A8%E6%80%81%E5%85%B3%E9%97%ADWAL%E6%96%B9%E6%A1%88/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="背景RocksDB 中的 disableWAL 是禁用 Write-Ahead Logging（WAL）的选项">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-09-24T16:59:56.992Z">
+<meta property="article:modified_time" content="2023-09-25T08:05:28.281Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Blog">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-Pika动态关闭WAL方案" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/09/25/Pika%E5%8A%A8%E6%80%81%E5%85%B3%E9%97%ADWAL%E6%96%B9%E6%A1%88/" class="article-date">
+  <time class="dt-published" datetime="2023-09-24T16:59:56.992Z" itemprop="datePublished">2023-09-25</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      Pika动态关闭WAL方案
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>RocksDB 中的 <code>disableWAL</code> 是禁用 Write-Ahead Logging（WAL）的选项<span id="more"></span>。用于确保数据的持久性和一致性。在 RocksDB 中，WAL 是默认启用的，这意味着每次写入操作都会首先追加到一个日志文件中，然后再写入内存中的数据结构。Pika 目前打算支持 WAL 动态关闭的命令，在写压力大的情况下，用户可以根据自己的需求动态去关闭    WAL 去缓解写瓶颈。</p>
+<h2 id="命令介绍"><a href="#命令介绍" class="headerlink" title="命令介绍"></a>命令介绍</h2><p>我们可以根据 disablewal (true&#x2F;false) 命令接受两个参数来决定 WAL 选项的开关，true 表示写 WAL 功能关闭，false 表示写 WAL 功能开启，需要注意的是写 WAL 默认是开启的</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&gt; disablewal <span class="literal">true</span>  // 写 WAL 关闭</span><br><span class="line">&gt; OK</span><br><span class="line">&gt; disablewal <span class="literal">false</span>  // 写 WAL 开启</span><br><span class="line">&gt; OK</span><br><span class="line">&gt; disablewal asdfs // 识别到异常参数</span><br><span class="line">&gt; (error) ERR Invalid parameter</span><br><span class="line">&gt; <span class="built_in">disable</span> <span class="literal">false</span> dasfasd // 参数数目异常</span><br><span class="line">&gt; (error) ERR wrong number of arguments <span class="keyword">for</span> <span class="string">&#x27;disablewal&#x27;</span> <span class="built_in">command</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="压测命令"><a href="#压测命令" class="headerlink" title="压测命令"></a>压测命令</h2><p>在同一配置下，我们对 WAL 的开关场景进行在 Mac 本机进行了压测</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-benchmark -p 9221 -n 100000 -r 100000 -t <span class="built_in">set</span> -d 8196</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="关闭-WAL"><a href="#关闭-WAL" class="headerlink" title="关闭 WAL"></a>关闭 WAL</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br></pre></td><td class="code"><pre><span class="line">====== SET ======                                                   </span><br><span class="line">  100000 requests completed <span class="keyword">in</span> 4.70 seconds</span><br><span class="line">  50 parallel clients</span><br><span class="line">  8196 bytes payload</span><br><span class="line">  keep alive: 1</span><br><span class="line">  host configuration <span class="string">&quot;save&quot;</span>: </span><br><span class="line">  host configuration <span class="string">&quot;appendonly&quot;</span>: no</span><br><span class="line">  multi-thread: no</span><br><span class="line"></span><br><span class="line">Latency by percentile distribution:</span><br><span class="line">0.000% &lt;= 0.439 milliseconds (cumulative count 1)</span><br><span class="line">50.000% &lt;= 1.263 milliseconds (cumulative count 50492)</span><br><span class="line">75.000% &lt;= 1.551 milliseconds (cumulative count 75379)</span><br><span class="line">87.500% &lt;= 1.831 milliseconds (cumulative count 87701)</span><br><span class="line">93.750% &lt;= 2.175 milliseconds (cumulative count 93797)</span><br><span class="line">96.875% &lt;= 2.703 milliseconds (cumulative count 96881)</span><br><span class="line">98.438% &lt;= 13.679 milliseconds (cumulative count 98438)</span><br><span class="line">99.219% &lt;= 25.487 milliseconds (cumulative count 99219)</span><br><span class="line">99.609% &lt;= 89.855 milliseconds (cumulative count 99613)</span><br><span class="line">99.805% &lt;= 147.455 milliseconds (cumulative count 99805)</span><br><span class="line">99.902% &lt;= 185.727 milliseconds (cumulative count 99904)</span><br><span class="line">99.951% &lt;= 311.295 milliseconds (cumulative count 99952)</span><br><span class="line">99.976% &lt;= 312.575 milliseconds (cumulative count 99979)</span><br><span class="line">99.988% &lt;= 317.439 milliseconds (cumulative count 99991)</span><br><span class="line">99.994% &lt;= 317.951 milliseconds (cumulative count 99995)</span><br><span class="line">99.997% &lt;= 319.999 milliseconds (cumulative count 99999)</span><br><span class="line">99.999% &lt;= 320.767 milliseconds (cumulative count 100000)</span><br><span class="line">100.000% &lt;= 320.767 milliseconds (cumulative count 100000)</span><br><span class="line"></span><br><span class="line">Cumulative distribution of latencies:</span><br><span class="line">0.000% &lt;= 0.103 milliseconds (cumulative count 0)</span><br><span class="line">0.007% &lt;= 0.503 milliseconds (cumulative count 7)</span><br><span class="line">0.140% &lt;= 0.607 milliseconds (cumulative count 140)</span><br><span class="line">1.070% &lt;= 0.703 milliseconds (cumulative count 1070)</span><br><span class="line">4.413% &lt;= 0.807 milliseconds (cumulative count 4413)</span><br><span class="line">10.597% &lt;= 0.903 milliseconds (cumulative count 10597)</span><br><span class="line">20.547% &lt;= 1.007 milliseconds (cumulative count 20547)</span><br><span class="line">31.738% &lt;= 1.103 milliseconds (cumulative count 31738)</span><br><span class="line">44.245% &lt;= 1.207 milliseconds (cumulative count 44245)</span><br><span class="line">54.674% &lt;= 1.303 milliseconds (cumulative count 54674)</span><br><span class="line">64.487% &lt;= 1.407 milliseconds (cumulative count 64487)</span><br><span class="line">72.169% &lt;= 1.503 milliseconds (cumulative count 72169)</span><br><span class="line">78.662% &lt;= 1.607 milliseconds (cumulative count 78662)</span><br><span class="line">83.306% &lt;= 1.703 milliseconds (cumulative count 83306)</span><br><span class="line">86.984% &lt;= 1.807 milliseconds (cumulative count 86984)</span><br><span class="line">89.502% &lt;= 1.903 milliseconds (cumulative count 89502)</span><br><span class="line">91.581% &lt;= 2.007 milliseconds (cumulative count 91581)</span><br><span class="line">92.975% &lt;= 2.103 milliseconds (cumulative count 92975)</span><br><span class="line">97.628% &lt;= 3.103 milliseconds (cumulative count 97628)</span><br><span class="line">98.051% &lt;= 4.103 milliseconds (cumulative count 98051)</span><br><span class="line">98.146% &lt;= 5.103 milliseconds (cumulative count 98146)</span><br><span class="line">98.152% &lt;= 6.103 milliseconds (cumulative count 98152)</span><br><span class="line">98.175% &lt;= 7.103 milliseconds (cumulative count 98175)</span><br><span class="line">98.234% &lt;= 8.103 milliseconds (cumulative count 98234)</span><br><span class="line">98.288% &lt;= 9.103 milliseconds (cumulative count 98288)</span><br><span class="line">98.299% &lt;= 10.103 milliseconds (cumulative count 98299)</span><br><span class="line">98.312% &lt;= 11.103 milliseconds (cumulative count 98312)</span><br><span class="line">98.323% &lt;= 12.103 milliseconds (cumulative count 98323)</span><br><span class="line">98.404% &lt;= 13.103 milliseconds (cumulative count 98404)</span><br><span class="line">98.499% &lt;= 14.103 milliseconds (cumulative count 98499)</span><br><span class="line">98.531% &lt;= 15.103 milliseconds (cumulative count 98531)</span><br><span class="line">98.598% &lt;= 16.103 milliseconds (cumulative count 98598)</span><br><span class="line">98.611% &lt;= 17.103 milliseconds (cumulative count 98611)</span><br><span class="line">98.681% &lt;= 18.111 milliseconds (cumulative count 98681)</span><br><span class="line">98.758% &lt;= 19.103 milliseconds (cumulative count 98758)</span><br><span class="line">98.776% &lt;= 20.111 milliseconds (cumulative count 98776)</span><br><span class="line">98.804% &lt;= 21.103 milliseconds (cumulative count 98804)</span><br><span class="line">98.895% &lt;= 22.111 milliseconds (cumulative count 98895)</span><br><span class="line">99.002% &lt;= 23.103 milliseconds (cumulative count 99002)</span><br><span class="line">99.099% &lt;= 24.111 milliseconds (cumulative count 99099)</span><br><span class="line">99.182% &lt;= 25.103 milliseconds (cumulative count 99182)</span><br><span class="line">99.244% &lt;= 26.111 milliseconds (cumulative count 99244)</span><br><span class="line">99.250% &lt;= 27.103 milliseconds (cumulative count 99250)</span><br><span class="line">99.266% &lt;= 29.103 milliseconds (cumulative count 99266)</span><br><span class="line">99.297% &lt;= 30.111 milliseconds (cumulative count 99297)</span><br><span class="line">99.300% &lt;= 31.103 milliseconds (cumulative count 99300)</span><br><span class="line">99.301% &lt;= 36.127 milliseconds (cumulative count 99301)</span><br><span class="line">99.324% &lt;= 37.119 milliseconds (cumulative count 99324)</span><br><span class="line">99.347% &lt;= 38.111 milliseconds (cumulative count 99347)</span><br><span class="line">99.350% &lt;= 39.103 milliseconds (cumulative count 99350)</span><br><span class="line">99.358% &lt;= 42.111 milliseconds (cumulative count 99358)</span><br><span class="line">99.384% &lt;= 43.103 milliseconds (cumulative count 99384)</span><br><span class="line">99.399% &lt;= 44.127 milliseconds (cumulative count 99399)</span><br><span class="line">99.400% &lt;= 45.119 milliseconds (cumulative count 99400)</span><br><span class="line">99.411% &lt;= 48.127 milliseconds (cumulative count 99411)</span><br><span class="line">99.437% &lt;= 49.119 milliseconds (cumulative count 99437)</span><br><span class="line">99.450% &lt;= 50.111 milliseconds (cumulative count 99450)</span><br><span class="line">99.503% &lt;= 67.135 milliseconds (cumulative count 99503)</span><br><span class="line">99.550% &lt;= 68.159 milliseconds (cumulative count 99550)</span><br><span class="line">99.551% &lt;= 76.159 milliseconds (cumulative count 99551)</span><br><span class="line">99.562% &lt;= 77.119 milliseconds (cumulative count 99562)</span><br><span class="line">99.592% &lt;= 78.143 milliseconds (cumulative count 99592)</span><br><span class="line">99.600% &lt;= 79.103 milliseconds (cumulative count 99600)</span><br><span class="line">99.626% &lt;= 90.111 milliseconds (cumulative count 99626)</span><br><span class="line">99.650% &lt;= 91.135 milliseconds (cumulative count 99650)</span><br><span class="line">99.662% &lt;= 94.143 milliseconds (cumulative count 99662)</span><br><span class="line">99.684% &lt;= 95.103 milliseconds (cumulative count 99684)</span><br><span class="line">99.698% &lt;= 96.127 milliseconds (cumulative count 99698)</span><br><span class="line">99.700% &lt;= 97.151 milliseconds (cumulative count 99700)</span><br><span class="line">99.701% &lt;= 104.127 milliseconds (cumulative count 99701)</span><br><span class="line">99.748% &lt;= 105.151 milliseconds (cumulative count 99748)</span><br><span class="line">99.750% &lt;= 106.111 milliseconds (cumulative count 99750)</span><br><span class="line">99.771% &lt;= 111.103 milliseconds (cumulative count 99771)</span><br><span class="line">99.799% &lt;= 112.127 milliseconds (cumulative count 99799)</span><br><span class="line">99.800% &lt;= 113.151 milliseconds (cumulative count 99800)</span><br><span class="line">99.802% &lt;= 147.199 milliseconds (cumulative count 99802)</span><br><span class="line">99.841% &lt;= 148.223 milliseconds (cumulative count 99841)</span><br><span class="line">99.849% &lt;= 149.119 milliseconds (cumulative count 99849)</span><br><span class="line">99.850% &lt;= 150.143 milliseconds (cumulative count 99850)</span><br><span class="line">99.863% &lt;= 173.183 milliseconds (cumulative count 99863)</span><br><span class="line">99.899% &lt;= 174.207 milliseconds (cumulative count 99899)</span><br><span class="line">99.900% &lt;= 175.103 milliseconds (cumulative count 99900)</span><br><span class="line">99.924% &lt;= 186.111 milliseconds (cumulative count 99924)</span><br><span class="line">99.949% &lt;= 187.135 milliseconds (cumulative count 99949)</span><br><span class="line">99.950% &lt;= 188.159 milliseconds (cumulative count 99950)</span><br><span class="line">99.952% &lt;= 311.295 milliseconds (cumulative count 99952)</span><br><span class="line">99.969% &lt;= 312.319 milliseconds (cumulative count 99969)</span><br><span class="line">99.982% &lt;= 313.343 milliseconds (cumulative count 99982)</span><br><span class="line">99.984% &lt;= 314.111 milliseconds (cumulative count 99984)</span><br><span class="line">99.987% &lt;= 317.183 milliseconds (cumulative count 99987)</span><br><span class="line">99.995% &lt;= 318.207 milliseconds (cumulative count 99995)</span><br><span class="line">99.996% &lt;= 319.231 milliseconds (cumulative count 99996)</span><br><span class="line">99.999% &lt;= 320.255 milliseconds (cumulative count 99999)</span><br><span class="line">100.000% &lt;= 321.279 milliseconds (cumulative count 100000)</span><br><span class="line"></span><br><span class="line">Summary:</span><br><span class="line">  throughput summary: 21290.19 requests per second</span><br><span class="line">  latency summary (msec):</span><br><span class="line">          avg       min       p50       p95       p99       max</span><br><span class="line">        2.301     0.432     1.263     2.319    23.071   320.767</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="开启-WAL"><a href="#开启-WAL" class="headerlink" title="开启 WAL"></a>开启 WAL</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br></pre></td><td class="code"><pre><span class="line">====== SET ======                                                   </span><br><span class="line">  100000 requests completed <span class="keyword">in</span> 8.18 seconds</span><br><span class="line">  50 parallel clients</span><br><span class="line">  8196 bytes payload</span><br><span class="line">  keep alive: 1</span><br><span class="line">  host configuration <span class="string">&quot;save&quot;</span>: </span><br><span class="line">  host configuration <span class="string">&quot;appendonly&quot;</span>: no</span><br><span class="line">  multi-thread: no</span><br><span class="line"></span><br><span class="line">Latency by percentile distribution:</span><br><span class="line">0.000% &lt;= 0.735 milliseconds (cumulative count 1)</span><br><span class="line">50.000% &lt;= 1.799 milliseconds (cumulative count 50099)</span><br><span class="line">75.000% &lt;= 2.391 milliseconds (cumulative count 75007)</span><br><span class="line">87.500% &lt;= 3.847 milliseconds (cumulative count 87510)</span><br><span class="line">93.750% &lt;= 7.911 milliseconds (cumulative count 93752)</span><br><span class="line">96.875% &lt;= 23.855 milliseconds (cumulative count 96876)</span><br><span class="line">98.438% &lt;= 29.567 milliseconds (cumulative count 98443)</span><br><span class="line">99.219% &lt;= 46.111 milliseconds (cumulative count 99219)</span><br><span class="line">99.609% &lt;= 75.775 milliseconds (cumulative count 99610)</span><br><span class="line">99.805% &lt;= 180.607 milliseconds (cumulative count 99805)</span><br><span class="line">99.902% &lt;= 263.423 milliseconds (cumulative count 99905)</span><br><span class="line">99.951% &lt;= 311.039 milliseconds (cumulative count 99955)</span><br><span class="line">99.976% &lt;= 313.855 milliseconds (cumulative count 99987)</span><br><span class="line">99.988% &lt;= 314.111 milliseconds (cumulative count 99991)</span><br><span class="line">99.994% &lt;= 335.359 milliseconds (cumulative count 99994)</span><br><span class="line">99.997% &lt;= 335.615 milliseconds (cumulative count 99999)</span><br><span class="line">99.999% &lt;= 335.871 milliseconds (cumulative count 100000)</span><br><span class="line">100.000% &lt;= 335.871 milliseconds (cumulative count 100000)</span><br><span class="line"></span><br><span class="line">Cumulative distribution of latencies:</span><br><span class="line">0.000% &lt;= 0.103 milliseconds (cumulative count 0)</span><br><span class="line">0.004% &lt;= 0.807 milliseconds (cumulative count 4)</span><br><span class="line">0.050% &lt;= 0.903 milliseconds (cumulative count 50)</span><br><span class="line">0.320% &lt;= 1.007 milliseconds (cumulative count 320)</span><br><span class="line">1.342% &lt;= 1.103 milliseconds (cumulative count 1342)</span><br><span class="line">4.184% &lt;= 1.207 milliseconds (cumulative count 4184)</span><br><span class="line">9.021% &lt;= 1.303 milliseconds (cumulative count 9021)</span><br><span class="line">16.432% &lt;= 1.407 milliseconds (cumulative count 16432)</span><br><span class="line">24.502% &lt;= 1.503 milliseconds (cumulative count 24502)</span><br><span class="line">33.979% &lt;= 1.607 milliseconds (cumulative count 33979)</span><br><span class="line">42.311% &lt;= 1.703 milliseconds (cumulative count 42311)</span><br><span class="line">50.647% &lt;= 1.807 milliseconds (cumulative count 50647)</span><br><span class="line">57.155% &lt;= 1.903 milliseconds (cumulative count 57155)</span><br><span class="line">62.778% &lt;= 2.007 milliseconds (cumulative count 62778)</span><br><span class="line">67.005% &lt;= 2.103 milliseconds (cumulative count 67005)</span><br><span class="line">83.614% &lt;= 3.103 milliseconds (cumulative count 83614)</span><br><span class="line">88.466% &lt;= 4.103 milliseconds (cumulative count 88466)</span><br><span class="line">91.345% &lt;= 5.103 milliseconds (cumulative count 91345)</span><br><span class="line">92.742% &lt;= 6.103 milliseconds (cumulative count 92742)</span><br><span class="line">93.437% &lt;= 7.103 milliseconds (cumulative count 93437)</span><br><span class="line">93.828% &lt;= 8.103 milliseconds (cumulative count 93828)</span><br><span class="line">94.144% &lt;= 9.103 milliseconds (cumulative count 94144)</span><br><span class="line">94.263% &lt;= 10.103 milliseconds (cumulative count 94263)</span><br><span class="line">94.435% &lt;= 11.103 milliseconds (cumulative count 94435)</span><br><span class="line">94.616% &lt;= 12.103 milliseconds (cumulative count 94616)</span><br><span class="line">94.980% &lt;= 13.103 milliseconds (cumulative count 94980)</span><br><span class="line">95.238% &lt;= 14.103 milliseconds (cumulative count 95238)</span><br><span class="line">95.415% &lt;= 15.103 milliseconds (cumulative count 95415)</span><br><span class="line">95.677% &lt;= 16.103 milliseconds (cumulative count 95677)</span><br><span class="line">95.883% &lt;= 17.103 milliseconds (cumulative count 95883)</span><br><span class="line">96.115% &lt;= 18.111 milliseconds (cumulative count 96115)</span><br><span class="line">96.312% &lt;= 19.103 milliseconds (cumulative count 96312)</span><br><span class="line">96.394% &lt;= 20.111 milliseconds (cumulative count 96394)</span><br><span class="line">96.441% &lt;= 21.103 milliseconds (cumulative count 96441)</span><br><span class="line">96.653% &lt;= 22.111 milliseconds (cumulative count 96653)</span><br><span class="line">96.766% &lt;= 23.103 milliseconds (cumulative count 96766)</span><br><span class="line">96.906% &lt;= 24.111 milliseconds (cumulative count 96906)</span><br><span class="line">97.137% &lt;= 25.103 milliseconds (cumulative count 97137)</span><br><span class="line">97.368% &lt;= 26.111 milliseconds (cumulative count 97368)</span><br><span class="line">97.690% &lt;= 27.103 milliseconds (cumulative count 97690)</span><br><span class="line">98.056% &lt;= 28.111 milliseconds (cumulative count 98056)</span><br><span class="line">98.307% &lt;= 29.103 milliseconds (cumulative count 98307)</span><br><span class="line">98.553% &lt;= 30.111 milliseconds (cumulative count 98553)</span><br><span class="line">98.610% &lt;= 31.103 milliseconds (cumulative count 98610)</span><br><span class="line">98.649% &lt;= 32.111 milliseconds (cumulative count 98649)</span><br><span class="line">98.699% &lt;= 33.119 milliseconds (cumulative count 98699)</span><br><span class="line">98.755% &lt;= 34.111 milliseconds (cumulative count 98755)</span><br><span class="line">98.800% &lt;= 35.103 milliseconds (cumulative count 98800)</span><br><span class="line">98.849% &lt;= 36.127 milliseconds (cumulative count 98849)</span><br><span class="line">98.850% &lt;= 37.119 milliseconds (cumulative count 98850)</span><br><span class="line">98.900% &lt;= 38.111 milliseconds (cumulative count 98900)</span><br><span class="line">98.917% &lt;= 39.103 milliseconds (cumulative count 98917)</span><br><span class="line">98.959% &lt;= 40.127 milliseconds (cumulative count 98959)</span><br><span class="line">98.983% &lt;= 42.111 milliseconds (cumulative count 98983)</span><br><span class="line">99.001% &lt;= 43.103 milliseconds (cumulative count 99001)</span><br><span class="line">99.107% &lt;= 44.127 milliseconds (cumulative count 99107)</span><br><span class="line">99.164% &lt;= 45.119 milliseconds (cumulative count 99164)</span><br><span class="line">99.219% &lt;= 46.111 milliseconds (cumulative count 99219)</span><br><span class="line">99.292% &lt;= 47.103 milliseconds (cumulative count 99292)</span><br><span class="line">99.313% &lt;= 48.127 milliseconds (cumulative count 99313)</span><br><span class="line">99.363% &lt;= 49.119 milliseconds (cumulative count 99363)</span><br><span class="line">99.390% &lt;= 50.111 milliseconds (cumulative count 99390)</span><br><span class="line">99.395% &lt;= 51.103 milliseconds (cumulative count 99395)</span><br><span class="line">99.397% &lt;= 52.127 milliseconds (cumulative count 99397)</span><br><span class="line">99.398% &lt;= 53.119 milliseconds (cumulative count 99398)</span><br><span class="line">99.401% &lt;= 55.103 milliseconds (cumulative count 99401)</span><br><span class="line">99.447% &lt;= 56.127 milliseconds (cumulative count 99447)</span><br><span class="line">99.452% &lt;= 57.119 milliseconds (cumulative count 99452)</span><br><span class="line">99.464% &lt;= 59.103 milliseconds (cumulative count 99464)</span><br><span class="line">99.525% &lt;= 60.127 milliseconds (cumulative count 99525)</span><br><span class="line">99.529% &lt;= 61.119 milliseconds (cumulative count 99529)</span><br><span class="line">99.539% &lt;= 62.111 milliseconds (cumulative count 99539)</span><br><span class="line">99.540% &lt;= 63.103 milliseconds (cumulative count 99540)</span><br><span class="line">99.584% &lt;= 70.143 milliseconds (cumulative count 99584)</span><br><span class="line">99.600% &lt;= 71.103 milliseconds (cumulative count 99600)</span><br><span class="line">99.603% &lt;= 75.135 milliseconds (cumulative count 99603)</span><br><span class="line">99.614% &lt;= 76.159 milliseconds (cumulative count 99614)</span><br><span class="line">99.655% &lt;= 90.111 milliseconds (cumulative count 99655)</span><br><span class="line">99.664% &lt;= 91.135 milliseconds (cumulative count 99664)</span><br><span class="line">99.670% &lt;= 98.111 milliseconds (cumulative count 99670)</span><br><span class="line">99.684% &lt;= 99.135 milliseconds (cumulative count 99684)</span><br><span class="line">99.685% &lt;= 117.119 milliseconds (cumulative count 99685)</span><br><span class="line">99.734% &lt;= 118.143 milliseconds (cumulative count 99734)</span><br><span class="line">99.738% &lt;= 123.135 milliseconds (cumulative count 99738)</span><br><span class="line">99.742% &lt;= 124.159 milliseconds (cumulative count 99742)</span><br><span class="line">99.744% &lt;= 127.103 milliseconds (cumulative count 99744)</span><br><span class="line">99.781% &lt;= 128.127 milliseconds (cumulative count 99781)</span><br><span class="line">99.800% &lt;= 129.151 milliseconds (cumulative count 99800)</span><br><span class="line">99.846% &lt;= 181.119 milliseconds (cumulative count 99846)</span><br><span class="line">99.850% &lt;= 182.143 milliseconds (cumulative count 99850)</span><br><span class="line">99.894% &lt;= 202.111 milliseconds (cumulative count 99894)</span><br><span class="line">99.900% &lt;= 203.135 milliseconds (cumulative count 99900)</span><br><span class="line">99.949% &lt;= 264.191 milliseconds (cumulative count 99949)</span><br><span class="line">99.950% &lt;= 265.215 milliseconds (cumulative count 99950)</span><br><span class="line">99.957% &lt;= 311.295 milliseconds (cumulative count 99957)</span><br><span class="line">99.991% &lt;= 314.111 milliseconds (cumulative count 99991)</span><br><span class="line">100.000% &lt;= 336.127 milliseconds (cumulative count 100000)</span><br><span class="line"></span><br><span class="line">Summary:</span><br><span class="line">  throughput summary: 12226.43 requests per second</span><br><span class="line">  latency summary (msec):</span><br><span class="line">          avg       min       p50       p95       p99       max</span><br><span class="line">        4.021     0.728     1.799    13.319    43.103   335.871</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h2><p>可以看到对于 10w 条请求的压测命令，关闭 WAL 会比开启 WAL 平均快 3~4 秒完成对请求的处理返回</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/09/25/Pika%E5%8A%A8%E6%80%81%E5%85%B3%E9%97%ADWAL%E6%96%B9%E6%A1%88/" data-id="clpme7vzk000hnqrfdfk5dpx7" data-title="Pika动态关闭WAL方案" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2023/10/26/Pika%E7%9A%84Cache%E6%96%B9%E6%A1%88/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Pika的Cache方案
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2023/08/31/Pika%20ReplicationID%20%E6%96%B9%E6%A1%88/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Pika ReplicationID 方案</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blog/" style="font-size: 10px;">Blog</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/11/">November 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/11/30/Floyd%E5%A4%9Akey%E5%91%BD%E4%BB%A4%E5%9C%A8%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/">Floyd的多key命令在并发场景下的解决方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/27/Floyd%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%A1%88%E8%A7%A3%E6%9E%90/">Pika的Floyd设计方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/21/Pika%E5%9C%A8K8s%E4%B8%8A%E7%9A%84%E6%89%A9%E5%AE%B9/">Pika在K8s上的扩容</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/30/Pika%E7%9A%84CacheStatus%E6%96%B9%E6%A1%88/">Pika的CacheStatus方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/26/Pika%E7%9A%84Cache%E6%96%B9%E6%A1%88/">Pika的Cache方案</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
