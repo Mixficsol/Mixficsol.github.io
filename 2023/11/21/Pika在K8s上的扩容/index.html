@@ -4,20 +4,25 @@
   <meta charset="utf-8">
   
   
-  <title>Codis sentinel升级方案 | Hexo</title>
+  <title>Pika在K8s上的扩容 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="背景Pika 当前的 sentinel 会在主节点挂掉后进行备升主">
+  <meta name="description" content="创建 Pika-cluster">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Codis sentinel升级方案">
-<meta property="og:url" content="http://example.com/2023/08/30/Codis%20sentinel%20%E5%8D%87%E7%BA%A7%E6%96%B9%E6%A1%88/index.html">
+<meta property="og:title" content="Pika在K8s上的扩容">
+<meta property="og:url" content="http://example.com/2023/11/21/Pika%E5%9C%A8K8s%E4%B8%8A%E7%9A%84%E6%89%A9%E5%AE%B9/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="背景Pika 当前的 sentinel 会在主节点挂掉后进行备升主">
+<meta property="og:description" content="创建 Pika-cluster">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2023-08-30T06:06:06.230Z">
-<meta property="article:modified_time" content="2023-09-04T10:26:43.566Z">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/aef0e71a-e785-473f-b40f-64b2196f6ba2">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/b801c58d-d042-4def-aec0-9ce1704126ba">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/dcf69477-0896-40b3-a6e9-a6ec19d05747">
+<meta property="og:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/a41fefe9-1c5c-4c43-8428-a3261a9dfc8c">
+<meta property="article:published_time" content="2023-11-21T09:23:49.531Z">
+<meta property="article:modified_time" content="2023-12-01T06:12:38.924Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Blog">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/OpenAtomFoundation/pika/assets/73943232/aef0e71a-e785-473f-b40f-64b2196f6ba2">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -74,10 +79,10 @@
 </header>
 
       <div class="outer">
-        <section id="main"><article id="post-Codis sentinel 升级方案" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+        <section id="main"><article id="post-Pika在K8s上的扩容" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
-    <a href="/2023/08/30/Codis%20sentinel%20%E5%8D%87%E7%BA%A7%E6%96%B9%E6%A1%88/" class="article-date">
-  <time class="dt-published" datetime="2023-08-30T06:06:06.230Z" itemprop="datePublished">2023-08-30</time>
+    <a href="/2023/11/21/Pika%E5%9C%A8K8s%E4%B8%8A%E7%9A%84%E6%89%A9%E5%AE%B9/" class="article-date">
+  <time class="dt-published" datetime="2023-11-21T09:23:49.531Z" itemprop="datePublished">2023-11-21</time>
 </a>
     
   </div>
@@ -88,7 +93,7 @@
         
   
     <h1 class="p-name article-title" itemprop="headline name">
-      Codis sentinel升级方案
+      Pika在K8s上的扩容
     </h1>
   
 
@@ -96,36 +101,34 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>Pika 当前的 sentinel 会在主节点挂掉后进行备升主<span id="more"></span>，但是挂掉后起来的主节点起来后依然是主，需要优化，当前的 sentinel 会每个 5s 检查一次所有主从状态，每1 秒检查预离线主机状态，决定是否自动主从切换。</p>
-<h2 id="改进方案"><a href="#改进方案" class="headerlink" title="改进方案"></a>改进方案</h2><p>对于已经掉线的主节点，我们进行逻辑删除，让其 ReplicaGroup 置为 false，使其流量不再打到旧主节点上</p>
-<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><ul>
-<li><p><strong>在不考虑 Codis 的情况下，如果有一个一主三从的 Pika 集群，手动 kill 掉主节点，会自动触发从节点升主吗?</strong></p>
-<p>不会</p>
+        <ol>
+<li><p>创建 Pika-cluster<span id="more"></span></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">helm install pika ./pika &amp;&amp; helm install pika-cluster ./pika-cluster</span><br></pre></td></tr></table></figure></li>
+</ol>
+<img width="942" alt="截屏2023-11-24 10 42 44" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/aef0e71a-e785-473f-b40f-64b2196f6ba2">
+
+
+<ol start="2">
+<li><p>暴露接口</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1. kubectl port-forward svc/pika-cluster-codis-fe 8080</span><br><span class="line">2. kubectl port-forward svc/pika-cluster-codis-proxy 19000</span><br></pre></td></tr></table></figure>
 </li>
-<li><p><strong>在考虑 Codis 的情况下，在一个 Group 中有一主三从的 Pika 集群，如果手动把主节点 kill 掉，此时 sentinel 会自动触发从节点升主吗？如果会的话这时候旧主节点重新连上来是什么状态？其他从节点需要手动执行 slaveof 才能同步数据吗？</strong></p>
-<p>会自动触发从节点升主，旧主节点重新连上来是 Master 状态，Codis 通过执行命令让其他节点执行 slaveof 命令，不需要人手动执行</p>
+<li><p>Pika-Cluster 部署并实现了自动 Rebalance</p>
+  <img width="1783" alt="截屏2023-10-11 15 05 46" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/b801c58d-d042-4def-aec0-9ce1704126ba">
+
+
 </li>
-<li><p><strong>如果 Codis 能自动实现切主操作并且不考虑这个 Group 此时有新加进节点的情况，那么在触发从节点同步新主数据的时候，是不是唯独没同步的就是之前旧主的节点</strong>？</p>
-<p>是的</p>
+<li><p>扩容 2 个实例</p>
 </li>
-<li><p><strong>是因为旧主的 info replication 的 role 是 Master 所以不能同步吗？</strong></p>
-<p>是的</p>
-</li>
-<li><p><strong>但是有个问题是旧主的 role 依然是 Master，这个需要在哪里进行改变身份呢？(Pika 层面还是 Codis 层面)</strong></p>
-<p>Codis 层面，Codis 发送 slaveof 命令给 Pika 让其实现旧主的 role 切换成 salve</p>
-</li>
-<li><p><strong>为什么不用 codis 自带的 fe 上有 sentinel 按钮的方案？</strong></p>
-<p>Codis 自带的 sentinel 比较被动，目前我们实现的 sentinel 每隔 5 秒会主动对 Group 中的节点进行检测</p>
-</li>
-<li><p><strong>切主过程中怎么从从节点中选主？是 offset 最大的作为新主吗？</strong></p>
-<p>检测节点的健康状态和 offset 最大节点作为新的主节点</p>
-</li>
-</ul>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">helm upgrade pika-cluster ./pika-cluster</span><br></pre></td></tr></table></figure>
+<img width="1131" alt="截屏2023-12-01 14 11 37" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/dcf69477-0896-40b3-a6e9-a6ec19d05747">
+
+<img width="1133" alt="截屏2023-12-01 14 11 49" src="https://github.com/OpenAtomFoundation/pika/assets/73943232/a41fefe9-1c5c-4c43-8428-a3261a9dfc8c">
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/08/30/Codis%20sentinel%20%E5%8D%87%E7%BA%A7%E6%96%B9%E6%A1%88/" data-id="clpm8c0ay0003k5rfek0gcmnr" data-title="Codis sentinel升级方案" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2023/11/21/Pika%E5%9C%A8K8s%E4%B8%8A%E7%9A%84%E6%89%A9%E5%AE%B9/" data-id="clpm8c0bb000nk5rf6w9g9vxo" data-title="Pika在K8s上的扩容" class="article-share-link">Share</a>
       
       
       
@@ -137,19 +140,19 @@
     
 <nav id="article-nav">
   
-    <a href="/2023/08/31/Pika%20ReplicationID%20%E6%96%B9%E6%A1%88/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2023/11/27/Floyd%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%A1%88%E8%A7%A3%E6%9E%90/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
-          Pika ReplicationID 方案
+          Pika的Floyd设计方案
         
       </div>
     </a>
   
   
-    <a href="/2023/08/18/Macos%20%E6%9C%AC%E5%9C%B0%E4%BD%BF%E7%94%A8%20pika_operator/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2023/10/30/Pika%E7%9A%84CacheStatus%E6%96%B9%E6%A1%88/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">Macos本地使用pika_operator</div>
+      <div class="article-nav-title">Pika的CacheStatus方案</div>
     </a>
   
 </nav>
