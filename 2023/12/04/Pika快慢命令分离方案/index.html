@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>Pika快慢命令分离方案 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="背景Pika 目前的线程模型在处理命令的逻辑下只有一个线程池去处理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Pika快慢命令分离方案">
+<meta property="og:url" content="http://example.com/2023/12/04/Pika%E5%BF%AB%E6%85%A2%E5%91%BD%E4%BB%A4%E5%88%86%E7%A6%BB%E6%96%B9%E6%A1%88/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="背景Pika 目前的线程模型在处理命令的逻辑下只有一个线程池去处理">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-12-04T06:30:00.093Z">
+<meta property="article:modified_time" content="2023-12-04T13:09:34.577Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Blog">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-Pika快慢命令分离方案" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/12/04/Pika%E5%BF%AB%E6%85%A2%E5%91%BD%E4%BB%A4%E5%88%86%E7%A6%BB%E6%96%B9%E6%A1%88/" class="article-date">
+  <time class="dt-published" datetime="2023-12-04T06:30:00.093Z" itemprop="datePublished">2023-12-04</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      Pika快慢命令分离方案
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>Pika 目前的线程模型在处理命令的逻辑下只有一个线程池去处理<span id="more"></span>，所有的命令装载在一个 Task 队列中，由线程池中的 worker 线程去处理请求，这样的实现方式导致在请求量比较大的情况下，一些慢命令(mset，mget) 等阻塞了快命令的执行，导致许多慢查询日志的产生，需要支持快命令和慢命令队列的分离，提升 Pika 的性能</p>
+<h1 id="设计方案"><a href="#设计方案" class="headerlink" title="设计方案"></a>设计方案</h1><p>我们从 Pika 层面和 Codis 层面都做了快慢命令的分离，在 Pika 层面，我们新加了一个 <code>slow-cmd</code>线程池专门处理慢命令，在 Codis 层面，我们，接下来我们以 Pika 和 Codis 两层跟大家介绍一下</p>
+<p><strong>Pika</strong></p>
+<p>在 <code>pika.conf</code> 中新增两个配置，一个是 <code>slow-cmd-thread-pool-size</code>这个是慢命令线程池大小，<code>slow-cmd-list</code>这个是慢命令列表，我们新增了一个线程池 <code>pika_slow_cmd_thread_pool</code>，继承 <code>net::ThreadPool</code>，用来处理慢命令.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">slow-cmd-thread-pool-size: 4 </span><br><span class="line">slow-cmd-list: mget, mset </span><br></pre></td></tr></table></figure>
+
+<p>在 <code>pika/src/pika_server.cc</code> 下，当 Pika 启动的时候，启动慢命令线程池</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">std::unique_ptr&lt;net::ThreadPool&gt; pika_slow_cmd_thread_pool_;</span><br><span class="line">pika_slow_cmd_thread_pool_ = std::<span class="built_in">make_unique</span>&lt;net::ThreadPool&gt;(g_pika_conf-&gt;<span class="built_in">slow_cmd_thread_pool_size</span>(), <span class="number">100000</span>); </span><br><span class="line"></span><br><span class="line">ret = pika_slow_cmd_thread_pool_-&gt;<span class="built_in">start_thread_pool</span>(); <span class="comment">// 启动慢命令线程池</span></span><br><span class="line"><span class="keyword">if</span> (ret != net::kSuccess) &#123;</span><br><span class="line">  dbs_.<span class="built_in">clear</span>();</span><br><span class="line">  <span class="built_in">LOG</span>(FATAL) &lt;&lt; <span class="string">&quot;Start PikaLowLevelThreadPool Error: &quot;</span> &lt;&lt; ret</span><br><span class="line">             &lt;&lt; (ret == net::kCreateThreadError ? <span class="string">&quot;: create thread error &quot;</span> : <span class="string">&quot;: other error&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>快慢命令的主要逻辑在 <code>pika/src/pika_client_conn.cc</code> </p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">PikaClientConn::ProcessRedisCmds</span><span class="params">(<span class="type">const</span> std::vector&lt;net::RedisCmdArgsType&gt;&amp; argvs, <span class="type">bool</span> async,</span></span></span><br><span class="line"><span class="params"><span class="function">                                      std::string* response)</span> </span>&#123;</span><br><span class="line">  time_stat_-&gt;<span class="built_in">Reset</span>();</span><br><span class="line">  <span class="keyword">if</span> (async) &#123;</span><br><span class="line">    <span class="keyword">auto</span> arg = <span class="keyword">new</span> <span class="built_in">BgTaskArg</span>(); <span class="comment">// 每个BgTaskArg里面都是一个命令</span></span><br><span class="line">    arg-&gt;redis_cmds = argvs;</span><br><span class="line">    time_stat_-&gt;enqueue_ts_ = pstd::<span class="built_in">NowMicros</span>();</span><br><span class="line">    arg-&gt;conn_ptr = std::<span class="built_in">dynamic_pointer_cast</span>&lt;PikaClientConn&gt;(<span class="built_in">shared_from_this</span>());</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * If using the pipeline method to transmit batch commands to Pika, it is unable to</span></span><br><span class="line"><span class="comment">     * correctly distinguish between fast and slow commands.</span></span><br><span class="line"><span class="comment">     * However, if using the pipeline method for Codis, it can correctly distinguish between</span></span><br><span class="line"><span class="comment">     * fast and slow commands, but it cannot guarantee sequential execution.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    std::string opt = argvs[<span class="number">0</span>][<span class="number">0</span>]; <span class="comment">// 取出命令</span></span><br><span class="line">    pstd::<span class="built_in">StringToLower</span>(opt);</span><br><span class="line">    <span class="type">bool</span> is_slow_cmd = g_pika_conf-&gt;<span class="built_in">is_slow_cmd</span>(opt); <span class="comment">// 判断是不是慢命令</span></span><br><span class="line">    g_pika_server-&gt;<span class="built_in">ScheduleClientPool</span>(&amp;DoBackgroundTask, arg, is_slow_cmd); <span class="comment">// 进行快慢命令分离</span></span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">BatchExecRedisCmd</span>(argvs);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">PikaServer::ScheduleClientPool</span><span class="params">(net::TaskFunc func, <span class="type">void</span>* arg, <span class="type">bool</span> is_slow_cmd)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (is_slow_cmd) &#123;</span><br><span class="line">    pika_slow_cmd_thread_pool_-&gt;<span class="built_in">Schedule</span>(func, arg); <span class="comment">// 慢命令使用慢命令线程池</span></span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  pika_client_processor_-&gt;<span class="built_in">SchedulePool</span>(func, arg); <span class="comment">// 快命令使用快命令线程池</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p><strong>Proxy</strong></p>
+<p><code>codis/config/proxy.toml</code> 修改了 Proxy 的配置文件</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Set backend parallel connections per server</span></span><br><span class="line"><span class="attr">backend_primary_parallel</span> = <span class="number">2</span></span><br><span class="line"><span class="attr">backend_primary_quick</span> = <span class="number">1</span></span><br><span class="line"><span class="attr">backend_replica_parallel</span> = <span class="number">2</span></span><br><span class="line"><span class="attr">backend_replica_quick</span> = <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<p><code>codis/pkg/proxy/backend.go</code>  下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *sharedBackendConn)</span></span> BackendConn(database <span class="type">int32</span>, seed <span class="type">uint</span>, isQuick <span class="type">bool</span>, must <span class="type">bool</span>) *BackendConn &#123;</span><br><span class="line">	<span class="keyword">if</span> s == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> s.single != <span class="literal">nil</span> &#123; <span class="comment">// 这种情况后端只有一个连接，不区分快慢连接</span></span><br><span class="line">		bc := s.single[database]</span><br><span class="line">		<span class="keyword">if</span> must || bc.IsConnected() &#123;</span><br><span class="line">			<span class="keyword">return</span> bc</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> parallel = s.conns[database]</span><br><span class="line">	<span class="keyword">var</span> i = seed</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> quick := s.owner.quick; quick &gt; <span class="number">0</span> &#123; </span><br><span class="line">		<span class="keyword">if</span> isQuick &#123; <span class="comment">// 如果是快请求则变量parallel中前面的quick个连接，</span></span><br><span class="line">			i = seed % <span class="type">uint</span>(quick)</span><br><span class="line">			<span class="keyword">if</span> bc := parallel[i]; bc.IsConnected() &#123;</span><br><span class="line">				<span class="comment">//log.Debugf(&quot;BackendConn: find quick bc[%d]&quot;, i)</span></span><br><span class="line">				<span class="keyword">return</span> bc</span><br><span class="line">			&#125;</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123; <span class="comment">// 如果是慢请求则遍历后面parallel中后面 len(parallel) - quick 个连接</span></span><br><span class="line">			i = seed % <span class="type">uint</span>(<span class="built_in">len</span>(parallel) - quick) + <span class="type">uint</span>(quick)</span><br><span class="line">			<span class="keyword">if</span> bc := parallel[i]; bc.IsConnected() &#123;</span><br><span class="line">				<span class="keyword">return</span> bc</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">for</span> <span class="keyword">range</span> parallel &#123;</span><br><span class="line">			i = (i + <span class="number">1</span>) % <span class="type">uint</span>(<span class="built_in">len</span>(parallel)) 		</span><br><span class="line">			<span class="keyword">if</span> bc := parallel[i]; bc.IsConnected() &#123;</span><br><span class="line">				<span class="keyword">return</span> bc</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> !must &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> parallel[<span class="number">0</span>]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如何区分快慢命令？</p>
+<p>每一个命令都有一个 Flag 成员，代表了一个命令的特性，可以增加一位作为快慢命令的标识。并且提供接口返回一个 bool 类型表示是否为快慢命令。另外还需更改 proxy 读取配置文件时要修改命令的 Flag</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> OpInfo <span class="keyword">struct</span> &#123;</span><br><span class="line">	Name <span class="type">string</span></span><br><span class="line">	Flag OpFlag</span><br><span class="line">	FlagMasterOnly</span><br><span class="line">	FlagMayWrite</span><br><span class="line">	FlagNotAllow</span><br><span class="line">	FlagQuick</span><br><span class="line">	FlagSlow</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>codis/pkg/proxy/router.go</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SetPrimaryQuickConn Set the number of quick connections.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *Router)</span></span> SetPrimaryQuickConn(quick <span class="type">int</span>) &#123;</span><br><span class="line">  	s.pool.primary.SetQuickConn(quick)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// SetReplicaQuickConn Set the number of quick connections.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *Router)</span></span> SetReplicaQuickConn(quick <span class="type">int</span>) &#123;</span><br><span class="line">  	s.pool.replica.SetQuickConn(quick)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>codis/pkg/proxy/proxy.go</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">  <span class="keyword">case</span> <span class="string">&quot;quick_cmd_list&quot;</span>:</span><br><span class="line">	err := setQuickCmdList(value)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Warnf(<span class="string">&quot;setQuickCmdList config[%s] failed, recover old config[%s].&quot;</span>, value, p.config.QuickCmdList)</span><br><span class="line">		setQuickCmdList(p.config.QuickCmdList)</span><br><span class="line">		<span class="keyword">return</span> redis.NewErrorf(<span class="string">&quot;err：%s.&quot;</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	p.config.QuickCmdList = value</span><br><span class="line">	<span class="keyword">return</span> redis.NewString([]<span class="type">byte</span>(<span class="string">&quot;OK&quot;</span>))</span><br><span class="line"><span class="keyword">case</span> <span class="string">&quot;slow_cmd_list&quot;</span>:</span><br><span class="line">	err := setSlowCmdList(value)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Warnf(<span class="string">&quot;setSlowCmdList config[%s] failed, recover old config[%s].&quot;</span>, value, p.config.SlowCmdList)</span><br><span class="line">		setSlowCmdList(p.config.SlowCmdList)</span><br><span class="line">		<span class="keyword">return</span> redis.NewErrorf(<span class="string">&quot;err：%s.&quot;</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	p.config.SlowCmdList = value</span><br><span class="line">	<span class="keyword">return</span> redis.NewString([]<span class="type">byte</span>(<span class="string">&quot;OK&quot;</span>))</span><br><span class="line"><span class="keyword">case</span> <span class="string">&quot;backend_replica_quick&quot;</span>:</span><br><span class="line">	n, err := strconv.Atoi(value)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> redis.NewErrorf(<span class="string">&quot;err：%s.&quot;</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> n &lt; <span class="number">0</span> || n &gt;= p.config.BackendReplicaParallel &#123;</span><br><span class="line">		<span class="keyword">return</span> redis.NewErrorf(<span class="string">&quot;invalid backend_replica_quick&quot;</span>)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		p.config.BackendReplicaQuick = n</span><br><span class="line">		p.router.SetReplicaQuickConn(p.config.BackendReplicaQuick)</span><br><span class="line">		<span class="keyword">return</span> redis.NewString([]<span class="type">byte</span>(<span class="string">&quot;OK&quot;</span>))</span><br><span class="line">	&#125;</span><br><span class="line"><span class="keyword">case</span> <span class="string">&quot;backend_primary_quick&quot;</span>:</span><br><span class="line">	n, err := strconv.Atoi(value)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> redis.NewErrorf(<span class="string">&quot;err：%s.&quot;</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> n &lt; <span class="number">0</span> || n &gt;= p.config.BackendPrimaryParallel &#123;</span><br><span class="line">		<span class="keyword">return</span> redis.NewErrorf(<span class="string">&quot;invalid backend_primary_quick&quot;</span>)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		p.config.BackendPrimaryQuick = n</span><br><span class="line">		p.router.SetPrimaryQuickConn(p.config.BackendPrimaryQuick)</span><br><span class="line">		<span class="keyword">return</span> redis.NewString([]<span class="type">byte</span>(<span class="string">&quot;OK&quot;</span>))</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/12/04/Pika%E5%BF%AB%E6%85%A2%E5%91%BD%E4%BB%A4%E5%88%86%E7%A6%BB%E6%96%B9%E6%A1%88/" data-id="clpqxhzo7000p3lrfac902b86" data-title="Pika快慢命令分离方案" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2023/11/30/Floyd%E5%A4%9Akey%E5%91%BD%E4%BB%A4%E5%9C%A8%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Floyd的多key命令在并发场景下的解决方案</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blog/" style="font-size: 10px;">Blog</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/11/">November 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/04/Pika%E5%BF%AB%E6%85%A2%E5%91%BD%E4%BB%A4%E5%88%86%E7%A6%BB%E6%96%B9%E6%A1%88/">Pika快慢命令分离方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/30/Floyd%E5%A4%9Akey%E5%91%BD%E4%BB%A4%E5%9C%A8%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/">Floyd的多key命令在并发场景下的解决方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/27/Floyd%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%A1%88%E8%A7%A3%E6%9E%90/">Pika的Floyd设计方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/21/Pika%E5%9C%A8K8s%E4%B8%8A%E7%9A%84%E6%89%A9%E5%AE%B9/">Pika在K8s上的扩容</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/30/Pika%E7%9A%84CacheStatus%E6%96%B9%E6%A1%88/">Pika的CacheStatus方案</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
