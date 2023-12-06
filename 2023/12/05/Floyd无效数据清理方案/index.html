@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>Floyd无效数据清理方案 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="背景在 Pika 的新存储引擎 Floyd 下每个 RocksDB 实例使用独立的 minor compaction 线程池和 major compaction 线程池">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Floyd无效数据清理方案">
+<meta property="og:url" content="http://example.com/2023/12/05/Floyd%E6%97%A0%E6%95%88%E6%95%B0%E6%8D%AE%E6%B8%85%E7%90%86%E6%96%B9%E6%A1%88/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="背景在 Pika 的新存储引擎 Floyd 下每个 RocksDB 实例使用独立的 minor compaction 线程池和 major compaction 线程池">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-12-05T10:26:55.059Z">
+<meta property="article:modified_time" content="2023-12-06T10:16:00.334Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Blog">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-Floyd无效数据清理方案" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/12/05/Floyd%E6%97%A0%E6%95%88%E6%95%B0%E6%8D%AE%E6%B8%85%E7%90%86%E6%96%B9%E6%A1%88/" class="article-date">
+  <time class="dt-published" datetime="2023-12-05T10:26:55.059Z" itemprop="datePublished">2023-12-05</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      Floyd无效数据清理方案
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>在 Pika 的新存储引擎 Floyd 下每个 RocksDB 实例使用独立的 <code>minor compaction</code> 线程池和 <code>major compaction</code> 线程池<span id="more"></span>，除此之外每个 RocksDB 实例使用一个后台线程，该后台线程用来发起 <code>manual compaction</code> 以及对 RocksDB 中存储的数据进行定期的统计和巡检</p>
+<h1 id="讨论"><a href="#讨论" class="headerlink" title="讨论"></a>讨论</h1><p>之前 Pika 的 Compaction 机制是 <code>autocompaction</code> 和 手动执行 <code>compaction</code>两种，其中 <code>autocompaction</code>分为在指定时间段和磁盘达到某些条件下进行 compaction，其中 <code>DoSameThingSpecificDB</code> 和 <code>DoSameThingEverySlot</code>两个接口处理。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">if</span> ((<span class="built_in">static_cast</span>&lt;<span class="type">double</span>&gt;(free_size) / <span class="built_in">static_cast</span>&lt;<span class="type">double</span>&gt;(total_size)) * <span class="number">100</span> &gt;= usage) &#123; <span class="comment">// 达到条件</span></span><br><span class="line">   ...</span><br><span class="line">   Status s = <span class="built_in">DoSameThingSpecificDB</span>(dbs, &#123;TaskType::kCompactAll&#125;);</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (!have_scheduled_crontask_ &amp;&amp; in_window) &#123; <span class="comment">// 定时</span></span><br><span class="line">  <span class="keyword">if</span> ((<span class="built_in">static_cast</span>&lt;<span class="type">double</span>&gt;(free_size) / <span class="built_in">static_cast</span>&lt;<span class="type">double</span>&gt;(total_size)) * <span class="number">100</span> &gt;= usage) &#123;</span><br><span class="line">    Status s = <span class="built_in">DoSameThingEverySlot</span>(TaskType::kCompactAll);</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于手动 <code>compaction</code>，我们是以执行命令的形式，可以看到 <code>compaction</code> 的过程是同步的</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">CompactCmd::Do</span><span class="params">(std::shared_ptr&lt;Slot&gt; slot)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">strcasecmp</span>(struct_type_.<span class="built_in">data</span>(), <span class="string">&quot;all&quot;</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">    g_pika_server-&gt;<span class="built_in">DoSameThingSpecificDB</span>(compact_dbs_, &#123;TaskType::kCompactAll&#125;);</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcasecmp</span>(struct_type_.<span class="built_in">data</span>(), <span class="string">&quot;string&quot;</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">    g_pika_server-&gt;<span class="built_in">DoSameThingSpecificDB</span>(compact_dbs_, &#123;TaskType::kCompactStrings&#125;);</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcasecmp</span>(struct_type_.<span class="built_in">data</span>(), <span class="string">&quot;hash&quot;</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">    g_pika_server-&gt;<span class="built_in">DoSameThingSpecificDB</span>(compact_dbs_, &#123;TaskType::kCompactHashes&#125;);</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcasecmp</span>(struct_type_.<span class="built_in">data</span>(), <span class="string">&quot;set&quot;</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">    g_pika_server-&gt;<span class="built_in">DoSameThingSpecificDB</span>(compact_dbs_, &#123;TaskType::kCompactSets&#125;);</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcasecmp</span>(struct_type_.<span class="built_in">data</span>(), <span class="string">&quot;zset&quot;</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">    g_pika_server-&gt;<span class="built_in">DoSameThingSpecificDB</span>(compact_dbs_, &#123;TaskType::kCompactZSets&#125;);</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcasecmp</span>(struct_type_.<span class="built_in">data</span>(), <span class="string">&quot;list&quot;</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">    g_pika_server-&gt;<span class="built_in">DoSameThingSpecificDB</span>(compact_dbs_, &#123;TaskType::kCompactList&#125;);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    res_.<span class="built_in">SetRes</span>(CmdRes::kInvalidDbType, struct_type_);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">LogCommand</span>();</span><br><span class="line">  res_.<span class="built_in">SetRes</span>(CmdRes::kOk);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">Status <span class="title">Storage::DoCompact</span><span class="params">(<span class="type">const</span> DataType&amp; type)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (type != kAll &amp;&amp; type != kStrings &amp;&amp; type != kHashes &amp;&amp; type != kSets &amp;&amp; type != kZSets &amp;&amp; type != kLists) &#123;</span><br><span class="line">    <span class="keyword">return</span> Status::<span class="built_in">InvalidArgument</span>(<span class="string">&quot;&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  Status s;</span><br><span class="line">  <span class="keyword">if</span> (type == kStrings) &#123;</span><br><span class="line">    current_task_type_ = Operation::kCleanStrings;</span><br><span class="line">    s = strings_db_-&gt;<span class="built_in">CompactRange</span>(<span class="literal">nullptr</span>, <span class="literal">nullptr</span>);</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (type == kHashes) &#123;</span><br><span class="line">    current_task_type_ = Operation::kCleanHashes;</span><br><span class="line">    s = hashes_db_-&gt;<span class="built_in">CompactRange</span>(<span class="literal">nullptr</span>, <span class="literal">nullptr</span>);</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (type == kSets) &#123;</span><br><span class="line">    current_task_type_ = Operation::kCleanSets;</span><br><span class="line">    s = sets_db_-&gt;<span class="built_in">CompactRange</span>(<span class="literal">nullptr</span>, <span class="literal">nullptr</span>);</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (type == kZSets) &#123;</span><br><span class="line">    current_task_type_ = Operation::kCleanZSets;</span><br><span class="line">    s = zsets_db_-&gt;<span class="built_in">CompactRange</span>(<span class="literal">nullptr</span>, <span class="literal">nullptr</span>);</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (type == kLists) &#123;</span><br><span class="line">    current_task_type_ = Operation::kCleanLists;</span><br><span class="line">    s = lists_db_-&gt;<span class="built_in">CompactRange</span>(<span class="literal">nullptr</span>, <span class="literal">nullptr</span>);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    current_task_type_ = Operation::kCleanAll;</span><br><span class="line">    s = strings_db_-&gt;<span class="built_in">CompactRange</span>(<span class="literal">nullptr</span>, <span class="literal">nullptr</span>); <span class="comment">// 对string类型的数据进行compaction</span></span><br><span class="line">    s = hashes_db_-&gt;<span class="built_in">CompactRange</span>(<span class="literal">nullptr</span>, <span class="literal">nullptr</span>);</span><br><span class="line">    s = sets_db_-&gt;<span class="built_in">CompactRange</span>(<span class="literal">nullptr</span>, <span class="literal">nullptr</span>);</span><br><span class="line">    s = zsets_db_-&gt;<span class="built_in">CompactRange</span>(<span class="literal">nullptr</span>, <span class="literal">nullptr</span>);</span><br><span class="line">    s = lists_db_-&gt;<span class="built_in">CompactRange</span>(<span class="literal">nullptr</span>, <span class="literal">nullptr</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  current_task_type_ = Operation::kNone;</span><br><span class="line">  <span class="keyword">return</span> s;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="方案"><a href="#方案" class="headerlink" title="方案"></a>方案</h1><p><strong>blackwidow</strong></p>
+<p>在 blackwidow 下启动某个 RocksDB 时，用的是默认的 env</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Status <span class="title">RedisHashes::Open</span><span class="params">(<span class="type">const</span> StorageOptions&amp; storage_options, <span class="type">const</span> std::string&amp; db_path)</span> </span>&#123;</span><br><span class="line">  statistics_store_-&gt;<span class="built_in">SetCapacity</span>(storage_options.statistics_max_size);</span><br><span class="line">  small_compaction_threshold_ = storage_options.small_compaction_threshold;</span><br><span class="line"></span><br><span class="line">  <span class="function">rocksdb::Options <span class="title">ops</span><span class="params">(storage_options.options)</span></span>;</span><br><span class="line">  Status s = rocksdb::DB::<span class="built_in">Open</span>(ops, db_path, &amp;db_);</span><br><span class="line">  <span class="keyword">if</span> (s.<span class="built_in">ok</span>()) &#123;</span><br><span class="line">    <span class="comment">// create column family</span></span><br><span class="line">    rocksdb::ColumnFamilyHandle* cf;</span><br><span class="line">    s = db_-&gt;<span class="built_in">CreateColumnFamily</span>(rocksdb::<span class="built_in">ColumnFamilyOptions</span>(), <span class="string">&quot;data_cf&quot;</span>, &amp;cf);</span><br><span class="line">    <span class="keyword">if</span> (!s.<span class="built_in">ok</span>()) &#123;</span><br><span class="line">      <span class="keyword">return</span> s;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// close DB</span></span><br><span class="line">    <span class="keyword">delete</span> cf;</span><br><span class="line">    <span class="keyword">delete</span> db_;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Open</span></span><br><span class="line">  <span class="function">rocksdb::DBOptions <span class="title">db_ops</span><span class="params">(storage_options.options)</span></span>; <span class="comment">// 这里用的是默认的 dp_ops.env</span></span><br><span class="line">  <span class="function">rocksdb::ColumnFamilyOptions <span class="title">meta_cf_ops</span><span class="params">(storage_options.options)</span></span>;</span><br><span class="line">  <span class="function">rocksdb::ColumnFamilyOptions <span class="title">data_cf_ops</span><span class="params">(storage_options.options)</span></span>;</span><br><span class="line">  meta_cf_ops.compaction_filter_factory = std::<span class="built_in">make_shared</span>&lt;HashesMetaFilterFactory&gt;();</span><br><span class="line">  data_cf_ops.compaction_filter_factory = std::<span class="built_in">make_shared</span>&lt;HashesDataFilterFactory&gt;(&amp;db_, &amp;handles_);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// use the bloom filter policy to reduce disk reads</span></span><br><span class="line">  <span class="function">rocksdb::BlockBasedTableOptions <span class="title">table_ops</span><span class="params">(storage_options.table_options)</span></span>;</span><br><span class="line">  table_ops.filter_policy.<span class="built_in">reset</span>(rocksdb::<span class="built_in">NewBloomFilterPolicy</span>(<span class="number">10</span>, <span class="literal">true</span>));</span><br><span class="line">  <span class="function">rocksdb::BlockBasedTableOptions <span class="title">meta_cf_table_ops</span><span class="params">(table_ops)</span></span>;</span><br><span class="line">  <span class="function">rocksdb::BlockBasedTableOptions <span class="title">data_cf_table_ops</span><span class="params">(table_ops)</span></span>;</span><br><span class="line">  <span class="keyword">if</span> (!storage_options.share_block_cache &amp;&amp; storage_options.block_cache_size &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    meta_cf_table_ops.block_cache = rocksdb::<span class="built_in">NewLRUCache</span>(storage_options.block_cache_size);</span><br><span class="line">    data_cf_table_ops.block_cache = rocksdb::<span class="built_in">NewLRUCache</span>(storage_options.block_cache_size);</span><br><span class="line">  &#125;</span><br><span class="line">  meta_cf_ops.table_factory.<span class="built_in">reset</span>(rocksdb::<span class="built_in">NewBlockBasedTableFactory</span>(meta_cf_table_ops));</span><br><span class="line">  data_cf_ops.table_factory.<span class="built_in">reset</span>(rocksdb::<span class="built_in">NewBlockBasedTableFactory</span>(data_cf_table_ops));</span><br><span class="line"></span><br><span class="line">  std::vector&lt;rocksdb::ColumnFamilyDescriptor&gt; column_families;</span><br><span class="line">  <span class="comment">// Meta CF</span></span><br><span class="line">  column_families.<span class="built_in">emplace_back</span>(rocksdb::kDefaultColumnFamilyName, meta_cf_ops);</span><br><span class="line">  <span class="comment">// Data CF</span></span><br><span class="line">  column_families.<span class="built_in">emplace_back</span>(<span class="string">&quot;data_cf&quot;</span>, data_cf_ops);</span><br><span class="line">  <span class="keyword">return</span> rocksdb::DB::<span class="built_in">Open</span>(db_ops, db_path, column_families, &amp;handles_, &amp;db_);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们看下 RocksDB 下默认的 env 定义，这里声明了一个静态变量 thread_joiner，在 PosixEnv() 的构造函数中，看到有两个线程池，一个用来做 <code>minor compaction</code> ，一个用来做 <code>major compaction</code>，由于是静态变量，所以 blackwidow 下五种数据类型用的是同一个 <code>Env</code> ，意味着五种数据类型的 <code>compaction</code>全都是通过这两个线程池去处理的。为了改进，我们决定修改 RocksDB 源码去实现每个 RocksDB 实例单独分配线程池去处理 <code>compaction</code>.</p>
+<p><code>rocksdb/env/env_posix.cc</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Env* <span class="title">Env::Default</span><span class="params">()</span> </span>&#123; <span class="comment">// 默认的Env</span></span><br><span class="line">  <span class="comment">// The following function call initializes the singletons of ThreadLocalPtr</span></span><br><span class="line">  <span class="comment">// right before the static default_env.  This guarantees default_env will</span></span><br><span class="line">  <span class="comment">// always being destructed before the ThreadLocalPtr singletons get</span></span><br><span class="line">  <span class="comment">// destructed as C++ guarantees that the destructions of static variables</span></span><br><span class="line">  <span class="comment">// is in the reverse order of their constructions.</span></span><br><span class="line">  <span class="comment">//</span></span><br><span class="line">  <span class="comment">// Since static members are destructed in the reverse order</span></span><br><span class="line">  <span class="comment">// of their construction, having this call here guarantees that</span></span><br><span class="line">  <span class="comment">// the destructor of static PosixEnv will go first, then the</span></span><br><span class="line">  <span class="comment">// the singletons of ThreadLocalPtr.</span></span><br><span class="line">  ThreadLocalPtr::<span class="built_in">InitSingletons</span>();</span><br><span class="line">  CompressionContextCache::<span class="built_in">InitSingleton</span>();</span><br><span class="line">  <span class="built_in">INIT_SYNC_POINT_SINGLETONS</span>();</span><br><span class="line">  <span class="comment">// Avoid problems with accessing most members of Env::Default() during</span></span><br><span class="line">  <span class="comment">// static destruction.</span></span><br><span class="line">  <span class="built_in">STATIC_AVOID_DESTRUCTION</span>(PosixEnv, default_env);</span><br><span class="line">  <span class="comment">// This destructor must be called on exit</span></span><br><span class="line">  <span class="function"><span class="type">static</span> PosixEnv::JoinThreadsOnExit <span class="title">thread_joiner</span><span class="params">(default_env)</span></span>;</span><br><span class="line">  <span class="keyword">return</span> &amp;default_env;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">PosixEnv::<span class="built_in">PosixEnv</span>()</span><br><span class="line">    : <span class="built_in">CompositeEnv</span>(FileSystem::<span class="built_in">Default</span>(), SystemClock::<span class="built_in">Default</span>()),</span><br><span class="line">      <span class="built_in">thread_pools_storage_</span>(Priority::TOTAL),</span><br><span class="line">      <span class="built_in">allow_non_owner_access_storage_</span>(<span class="literal">true</span>),</span><br><span class="line">      <span class="built_in">thread_pools_</span>(thread_pools_storage_),</span><br><span class="line">      <span class="built_in">mu_</span>(mu_storage_),</span><br><span class="line">      <span class="built_in">threads_to_join_</span>(threads_to_join_storage_),</span><br><span class="line">      <span class="built_in">allow_non_owner_access_</span>(allow_non_owner_access_storage_) &#123;</span><br><span class="line">  ThreadPoolImpl::<span class="built_in">PthreadCall</span>(<span class="string">&quot;mutex_init&quot;</span>, <span class="built_in">pthread_mutex_init</span>(&amp;mu_, <span class="literal">nullptr</span>));</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> pool_id = <span class="number">0</span>; pool_id &lt; Env::Priority::TOTAL; ++pool_id) &#123;</span><br><span class="line">    thread_pools_[pool_id].<span class="built_in">SetThreadPriority</span>( <span class="comment">// 线程池</span></span><br><span class="line">        <span class="built_in">static_cast</span>&lt;Env::Priority&gt;(pool_id));</span><br><span class="line">    <span class="comment">// This allows later initializing the thread-local-env of each thread.</span></span><br><span class="line">    thread_pools_[pool_id].<span class="built_in">SetHostEnv</span>(<span class="keyword">this</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  thread_status_updater_ = <span class="built_in">CreateThreadStatusUpdater</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>floyd</strong></p>
+<p>在 <code>pika/src/storage/src/instance.cc</code>下，我们需要修改 <code>dp_ops.env</code>这个变量.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Status <span class="title">Instance::Open</span><span class="params">(<span class="type">const</span> StorageOptions&amp; storage_options, <span class="type">const</span> std::string&amp; db_path)</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="function">rocksdb::DBOptions <span class="title">db_ops</span><span class="params">(storage_options.options)</span></span>;</span><br><span class="line">  db_ops.create_missing_column_families = <span class="literal">true</span>;</span><br><span class="line">  db_ops.env = rocksdb::Env::<span class="built_in">Instance</span>();  <span class="comment">// 当前的是自定义的Env</span></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>RocksDB</strong></p>
+<p>在 RocksDB 层面，我们做了以下的修改，在 <code>env.h</code>中加上了一个静态方案 <code>Instance</code>用来返回 <code>PosixEnv</code>对象，这样每个 RocksDB 都有自己对应的线程池去做单独的 <code>compaction</code></p>
+<p><code>env/env_posix.cc</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">+ <span class="built_in">PosixEnv</span>();</span><br><span class="line">+  ~<span class="built_in">PosixEnv</span>() <span class="keyword">override</span> &#123;</span><br><span class="line">+    <span class="keyword">for</span> (<span class="type">const</span> <span class="keyword">auto</span> tid : threads_to_join_) &#123;</span><br><span class="line">+      <span class="built_in">pthread_join</span>(tid, <span class="literal">nullptr</span>);</span><br><span class="line">+    &#125;</span><br><span class="line">+    <span class="keyword">for</span> (<span class="type">int</span> pool_id = <span class="number">0</span>; pool_id &lt; Env::Priority::TOTAL; ++pool_id) &#123;</span><br><span class="line">+     thread_pools_[pool_id].<span class="built_in">JoinAllThreads</span>();</span><br><span class="line">+    &#125;</span><br><span class="line">+ &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">+ <span class="function">Env* <span class="title">Env::Instance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">+   <span class="keyword">return</span> (<span class="keyword">new</span> <span class="built_in">PosixEnv</span>());</span><br><span class="line">+ &#125;</span><br><span class="line"> </span><br></pre></td></tr></table></figure>
+
+<p><code>include/rocksdb/env.h</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">+ <span class="comment">// get one env instance for convenience</span></span><br><span class="line">+ <span class="function"><span class="type">static</span> Env* <span class="title">Instance</span><span class="params">()</span></span>; <span class="comment">// 返回一个PosixEnv()</span></span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/12/05/Floyd%E6%97%A0%E6%95%88%E6%95%B0%E6%8D%AE%E6%B8%85%E7%90%86%E6%96%B9%E6%A1%88/" data-id="clptm73js0004b7rfatk5bfyv" data-title="Floyd无效数据清理方案" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2023/12/04/Pika%E5%BF%AB%E6%85%A2%E5%91%BD%E4%BB%A4%E5%88%86%E7%A6%BB%E6%96%B9%E6%A1%88/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Pika快慢命令分离方案</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blog/" style="font-size: 10px;">Blog</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/11/">November 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/05/Floyd%E6%97%A0%E6%95%88%E6%95%B0%E6%8D%AE%E6%B8%85%E7%90%86%E6%96%B9%E6%A1%88/">Floyd无效数据清理方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/12/04/Pika%E5%BF%AB%E6%85%A2%E5%91%BD%E4%BB%A4%E5%88%86%E7%A6%BB%E6%96%B9%E6%A1%88/">Pika快慢命令分离方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/30/Floyd%E5%A4%9Akey%E5%91%BD%E4%BB%A4%E5%9C%A8%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/">Floyd的多key命令在并发场景下的解决方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/27/Floyd%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%A1%88%E8%A7%A3%E6%9E%90/">Pika的Floyd设计方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/11/24/Pika%E5%9C%A8Kubeblocks%E4%B8%8A%E9%83%A8%E7%BD%B2%E6%8A%80%E6%9C%AF%E7%BB%86%E8%8A%82/">Pika在Kubeblocks上部署细节</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
