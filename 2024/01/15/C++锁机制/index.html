@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>C++锁机制 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="互斥锁12std::mutex mutexstd::shared_mutex mutex    成员方法：lock(), try_lock(), unlock()">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++锁机制">
+<meta property="og:url" content="http://example.com/2024/01/15/C++%E9%94%81%E6%9C%BA%E5%88%B6/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="互斥锁12std::mutex mutexstd::shared_mutex mutex    成员方法：lock(), try_lock(), unlock()">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-01-15T08:19:01.496Z">
+<meta property="article:modified_time" content="2024-01-16T06:09:27.577Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Blog">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-C++锁机制" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/01/15/C++%E9%94%81%E6%9C%BA%E5%88%B6/" class="article-date">
+  <time class="dt-published" datetime="2024-01-15T08:19:01.496Z" itemprop="datePublished">2024-01-15</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      C++锁机制
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="互斥锁"><a href="#互斥锁" class="headerlink" title="互斥锁"></a>互斥锁</h1><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">std::mutex mutex</span><br><span class="line">std::shared_mutex mutex</span><br></pre></td></tr></table></figure>
+
+
+
+<p>成员方法：lock(), try_lock(), unlock() <span id="more"></span></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">myMutex.<span class="built_in">lock</span>(); <span class="comment">// 或者使用 std::lock_guard&lt;std::mutex&gt; guard(myMutex);</span></span><br><span class="line"><span class="comment">// 临界区代码</span></span><br><span class="line">myMutex.<span class="built_in">unlock</span>();</span><br><span class="line"><span class="comment">// 在 lock_guard 的情况下，不需要手动 unlock，它会在离开作用域时自动释放锁</span></span><br><span class="line"><span class="comment">// 尝试锁定两个互斥量</span></span><br><span class="line"><span class="keyword">if</span> (std::<span class="built_in">try_lock</span>(lock1, lock2) == std::defer_lock) &#123;</span><br><span class="line">    <span class="comment">// 成功锁定两个互斥量，执行临界区代码</span></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;mutex&gt;</span></span></span><br><span class="line"> </span><br><span class="line"><span class="comment">// 定义互斥锁</span></span><br><span class="line">std::mutex g_mutex;</span><br><span class="line"> </span><br><span class="line"><span class="comment">// 临界区代码</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">critical_section</span><span class="params">(<span class="type">int</span> thread_id)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 加锁</span></span><br><span class="line">    g_mutex.<span class="built_in">lock</span>();</span><br><span class="line">    <span class="comment">// 访问共享资源</span></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;Thread &quot;</span> &lt;&lt; thread_id &lt;&lt; <span class="string">&quot; enter critical section.&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">    <span class="comment">// 释放锁</span></span><br><span class="line">    std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">seconds</span>(<span class="number">5</span>));</span><br><span class="line">    g_mutex.<span class="built_in">unlock</span>();</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 创建两个线程</span></span><br><span class="line">    <span class="function">std::thread <span class="title">t1</span><span class="params">(critical_section, <span class="number">1</span>)</span></span>;</span><br><span class="line">    <span class="function">std::thread <span class="title">t2</span><span class="params">(critical_section, <span class="number">2</span>)</span></span>;</span><br><span class="line">    <span class="comment">// 等待两个线程执行完成</span></span><br><span class="line">    t1.<span class="built_in">join</span>();</span><br><span class="line">    t2.<span class="built_in">join</span>();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="lock-guard"><a href="#lock-guard" class="headerlink" title="lock_guard"></a>lock_guard</h2><p>建议使用 <strong>lock_guard</strong> 替代直接使用 <code>mutext.lock()</code>、<code>mutext.unlock()</code>，<code>lock_guard</code> 会在构造方法里 <code>mutext.lock()</code>，析构方法里 <code>mutext.unlock()</code>，主要为了避免中途异常退出导致 <code>mutext</code> 没有 <code>unlock</code>，出了作用域后自动调用 <code>lock_guard</code> 的析构方法</p>
+<h2 id="unique-lock"><a href="#unique-lock" class="headerlink" title="unique_lock"></a>unique_lock</h2><p>**lock_guard **只能在析构的时候解锁，不提供 <code>unlock</code> 接口，不够方便，<code>unique_lock</code> 提供 <code>lock</code> 和 <code>unlock</code> 接口，更灵活，虽然 <code>unique_lock</code> 比 <code>lock_guard</code> 灵活很多，但是效率上差一点，内存占用多一点。</p>
+<h1 id="递归锁"><a href="#递归锁" class="headerlink" title="递归锁"></a>递归锁</h1><p> C++ 中的递归互斥量是一种特殊的互斥量，它可以被同一个线程多次锁定，而不会发生死锁。递归互斥量的实现原理是，在锁定时维护一个锁定计数器，每次解锁时将计数器减一，只有当计数器为 0 时才会释放锁</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;mutex&gt;</span></span></span><br><span class="line"> </span><br><span class="line">std::recursive_mutex mtx;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">foo</span><span class="params">(<span class="type">int</span> n)</span> </span>&#123;</span><br><span class="line">    mtx.<span class="built_in">lock</span>();</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;Thread &quot;</span> &lt;&lt; n &lt;&lt; <span class="string">&quot; locked the mutex.&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">    <span class="keyword">if</span> (n &gt; <span class="number">1</span>) &#123;</span><br><span class="line">        <span class="built_in">foo</span>(n - <span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;Thread &quot;</span> &lt;&lt; n &lt;&lt; <span class="string">&quot; unlocked the mutex.&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">    mtx.<span class="built_in">unlock</span>();</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="function">std::thread <span class="title">t1</span><span class="params">(foo, <span class="number">3</span>)</span></span>;</span><br><span class="line">    <span class="function">std::thread <span class="title">t2</span><span class="params">(foo, <span class="number">2</span>)</span></span>;</span><br><span class="line">    t1.<span class="built_in">join</span>();</span><br><span class="line">    t2.<span class="built_in">join</span>();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="条件锁"><a href="#条件锁" class="headerlink" title="条件锁"></a>条件锁</h1><p>成员方法：wait、wait_for、notify_one、notify_all</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;chrono&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;queue&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;mutex&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;condition_variable&gt;</span></span></span><br><span class="line"> </span><br><span class="line">std::queue&lt;<span class="type">int</span>&gt; data_queue; <span class="comment">// 数据队列</span></span><br><span class="line">std::mutex data_mutex; <span class="comment">// 互斥锁</span></span><br><span class="line">std::condition_variable data_cond; <span class="comment">// 条件变量</span></span><br><span class="line"> </span><br><span class="line"><span class="comment">// 生产数据函数</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">producer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">10</span>; ++i) &#123;</span><br><span class="line">        <span class="comment">// 生产数据</span></span><br><span class="line">        std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">milliseconds</span>(<span class="number">100</span>));</span><br><span class="line">        <span class="function">std::unique_lock&lt;std::mutex&gt; <span class="title">lock</span><span class="params">(data_mutex)</span></span>;</span><br><span class="line">        data_queue.<span class="built_in">push</span>(i);</span><br><span class="line">        std::cout &lt;&lt; <span class="string">&quot;Producer thread: produce data &quot;</span> &lt;&lt; i &lt;&lt; std::endl;</span><br><span class="line"> </span><br><span class="line">        <span class="comment">// 唤醒消费线程</span></span><br><span class="line">        data_cond.<span class="built_in">notify_one</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="comment">// 消费数据函数</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">consumer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">        <span class="comment">// 等待数据</span></span><br><span class="line">        <span class="function">std::unique_lock&lt;std::mutex&gt; <span class="title">lock</span><span class="params">(data_mutex)</span></span>;</span><br><span class="line">        data_cond.<span class="built_in">wait</span>(lock, [] &#123; <span class="keyword">return</span> !data_queue.<span class="built_in">empty</span>(); &#125;);</span><br><span class="line"> </span><br><span class="line">        <span class="comment">// 消费数据</span></span><br><span class="line">        <span class="type">int</span> data = data_queue.<span class="built_in">front</span>();</span><br><span class="line">        data_queue.<span class="built_in">pop</span>();</span><br><span class="line">        std::cout &lt;&lt; <span class="string">&quot;Consumer thread: consume data &quot;</span> &lt;&lt; data &lt;&lt; std::endl;</span><br><span class="line"> </span><br><span class="line">        <span class="comment">// 检查是否结束</span></span><br><span class="line">        <span class="keyword">if</span> (data == <span class="number">10</span>) &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="function">std::thread <span class="title">t1</span><span class="params">(producer)</span></span>;</span><br><span class="line">    <span class="function">std::thread <span class="title">t2</span><span class="params">(consumer)</span></span>;</span><br><span class="line">    t1.<span class="built_in">join</span>();</span><br><span class="line">    t2.<span class="built_in">join</span>();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="读写锁"><a href="#读写锁" class="headerlink" title="读写锁"></a>读写锁</h1><p>成员方法：lock(), unlock(), lock_shared, unlock_shared</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;shared_mutex&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;thread&gt;</span></span></span><br><span class="line"></span><br><span class="line">std::shared_mutex sharedMtx;</span><br><span class="line"><span class="type">int</span> sharedData = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">readData</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    sharedMtx.<span class="built_in">lock_shared</span>();</span><br><span class="line">    <span class="comment">// 执行读取操作</span></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;Read shared data: &quot;</span> &lt;&lt; sharedData &lt;&lt; std::endl;</span><br><span class="line">    sharedMtx.<span class="built_in">unlock_shared</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">writeData</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    sharedMtx.<span class="built_in">lock</span>();</span><br><span class="line">    <span class="comment">// 执行写入操作</span></span><br><span class="line">    sharedData++;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;Write shared data: &quot;</span> &lt;&lt; sharedData &lt;&lt; std::endl;</span><br><span class="line">    sharedMtx.<span class="built_in">unlock</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="function">std::thread <span class="title">readerThread1</span><span class="params">(readData)</span></span>;</span><br><span class="line">    <span class="function">std::thread <span class="title">readerThread2</span><span class="params">(readData)</span></span>;</span><br><span class="line">    <span class="function">std::thread <span class="title">writerThread</span><span class="params">(writeData)</span></span>;</span><br><span class="line"></span><br><span class="line">    readerThread1.<span class="built_in">join</span>();</span><br><span class="line">    readerThread2.<span class="built_in">join</span>();</span><br><span class="line">    writerThread.<span class="built_in">join</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;chrono&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;shared_mutex&gt;</span></span></span><br><span class="line"> </span><br><span class="line">std::shared_mutex rw_lock; <span class="comment">// 读写锁</span></span><br><span class="line"><span class="type">int</span> shared_var = <span class="number">0</span>; <span class="comment">// 共享变量</span></span><br><span class="line"> </span><br><span class="line"><span class="comment">// 写线程函数</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">writer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; ++i) &#123;</span><br><span class="line">        <span class="comment">// 独占写锁</span></span><br><span class="line">        <span class="function">std::unique_lock&lt;std::shared_mutex&gt; <span class="title">lock</span><span class="params">(rw_lock)</span></span>;</span><br><span class="line"> </span><br><span class="line">        <span class="comment">// 写共享变量</span></span><br><span class="line">        ++shared_var;</span><br><span class="line">        std::cout &lt;&lt; <span class="string">&quot;Writer thread: write shared_var=&quot;</span> &lt;&lt; shared_var &lt;&lt; std::endl;</span><br><span class="line"> </span><br><span class="line">        <span class="comment">// 等待一段时间</span></span><br><span class="line">        std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">milliseconds</span>(<span class="number">100</span>));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="comment">// 读线程函数</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">reader</span><span class="params">(<span class="type">int</span> id)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; ++i) &#123;</span><br><span class="line">        <span class="comment">// 共享读锁</span></span><br><span class="line">        <span class="function">std::shared_lock&lt;std::shared_mutex&gt; <span class="title">lock</span><span class="params">(rw_lock)</span></span>;</span><br><span class="line"> </span><br><span class="line">        <span class="comment">// 读共享变量</span></span><br><span class="line">        <span class="type">int</span> value = shared_var;</span><br><span class="line">        std::cout &lt;&lt; <span class="string">&quot;Reader thread &quot;</span> &lt;&lt; id &lt;&lt; <span class="string">&quot;: read shared_var=&quot;</span> &lt;&lt; value &lt;&lt; std::endl;</span><br><span class="line"> </span><br><span class="line">        <span class="comment">// 等待一段时间</span></span><br><span class="line">        std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">milliseconds</span>(<span class="number">100</span>));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="function">std::thread <span class="title">t1</span><span class="params">(writer)</span></span>;</span><br><span class="line">    <span class="function">std::thread <span class="title">t2</span><span class="params">(reader, <span class="number">1</span>)</span></span>;</span><br><span class="line">    <span class="function">std::thread <span class="title">t3</span><span class="params">(reader, <span class="number">2</span>)</span></span>;</span><br><span class="line">    <span class="function">std::thread <span class="title">t4</span><span class="params">(reader, <span class="number">3</span>)</span></span>;</span><br><span class="line">    t1.<span class="built_in">join</span>();</span><br><span class="line">    t2.<span class="built_in">join</span>();</span><br><span class="line">    t3.<span class="built_in">join</span>();</span><br><span class="line">    t4.<span class="built_in">join</span>();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2024/01/15/C++%E9%94%81%E6%9C%BA%E5%88%B6/" data-id="clrfyfs1b000108rfcpf9eo7x" data-title="C++锁机制" class="article-share-link">Share</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2024/01/09/Pika%E7%9A%84%E5%85%A8%E9%87%8F%E5%90%8C%E6%AD%A5/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Pika的全量同步</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blog/" rel="tag">Blog</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blog/" style="font-size: 10px;">Blog</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/01/">January 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/11/">November 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">September 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/01/15/C++%E9%94%81%E6%9C%BA%E5%88%B6/">C++锁机制</a>
+          </li>
+        
+          <li>
+            <a href="/2024/01/09/Pika%E7%9A%84%E5%85%A8%E9%87%8F%E5%90%8C%E6%AD%A5/">Pika的全量同步</a>
+          </li>
+        
+          <li>
+            <a href="/2024/01/04/Pika%E7%9A%84%E5%A2%9E%E9%87%8F%E5%90%8C%E6%AD%A5/">Pika的增量同步</a>
+          </li>
+        
+          <li>
+            <a href="/2023/12/05/Floyd%E6%97%A0%E6%95%88%E6%95%B0%E6%8D%AE%E6%B8%85%E7%90%86%E6%96%B9%E6%A1%88/">Floyd无效数据清理方案</a>
+          </li>
+        
+          <li>
+            <a href="/2023/12/04/Pika%E5%BF%AB%E6%85%A2%E5%91%BD%E4%BB%A4%E5%88%86%E7%A6%BB%E6%96%B9%E6%A1%88/">Pika快慢命令分离方案</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2024 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
